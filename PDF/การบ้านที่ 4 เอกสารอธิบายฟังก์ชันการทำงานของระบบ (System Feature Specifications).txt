@@ -1,0 +1,186 @@
+--- Page 1 ---
+เอกสารอธิบายฟังก์ชันการท างานของระบบ (System 
+Feature Specifications) 
+โครงงาน: แพลตฟอร์มสนับสนุนการเรียนรู้ชุมชนไอซีที (ICT Community Forum) 
+🚀 เฟสที่ 1: Core Features (ฟังก์ชันแกนหลักของระบบ - Must Have) 
+1. ระบบจัดหมวดหมู่ค าถามตามรายวิชา (Subject-based Categorization & Repository) 
+• วัตถุประสงค์: แก้ไขปัญหาข้อมูลสูญหาย ข้อมูลหาไม่เจอ ข้อความไหล และไฟล์หมดอายุจากระบบแชทเดิม 
+• กลุ่มเป้าหมาย (Persona): กลุ่ม [IL] Information Lost (นักศึกษาที่เจอปัญหาข้อมูลสูญหาย/ตามหาไฟล์ไม่เจอ) 
+• ฟังก์ชันย่อยและการท างานบน UI: 
+o Subject-based Threads & Navigation: แถบเมนูด้านซ้ายสุดของหน้าจอ 
+แยกห้องสนทนาตามรหัสวิชาหลักและวิชาเลือก (เช่น ITCS211, ITCS306) 
+โดยแต่ละวิชามีสีประจ าวิชาเด่นชัดเพื่อป้องกันการโพสต์ผิดห้อง 
+o Pinned Academic Repository (คลังปักหมุดถาวร): พื้นที่กล่องด้านบนสุดของฟีดหลักในแต่ละวิชา 
+ส าหรับจัดเก็บไฟล์ส าคัญ (PDF, สไลด์เรียน, การ์ดโจทย์การบ้าน) โดยไฟล์ทั้งหมดจะถูกอัปโหลดไปเก็บที่ Cloud 
+Storage อย่างถาวร มีป้ายระบุสิทธิ ์ ชัดเจนว่า • No expiry พร้อมปุ่ม [Download] 
+o Keyword Search & Tag Cloud: แถบค้นหาอัจฉริยะด้านบนสุดที่เชื่อมโยงกับระบบป้ายก ากับ (#Tags 
+เช่น #Lab1, #Java) ช่วยให้สืบค้นและดึงกระทู้เก่าที่มีค าตอบอยู่แล้วขึ้นมาแสดงผลได้ทันที 
+• ระบบหลังบ้านที่รองรับ (Technical Backend): Database Relational Schema (แยก Table 
+รายวิชาและโครงสร้างข้อมูลโพสต์) + Supabase/Cloud Storage การจัดเก็บไฟล์ถาวร 
+2. ระบบถามค าถามแบบไม่ระบุตัวตน (Anonymous Posting Mode) 
+• วัตถุประสงค์: ท าลายก าแพงความกลัว ลดความวิตกกังวลทางสังคม และเพิ่มความกล้าในการถามค าถามพื้นฐาน 
+• กลุ่มเป้าหมาย (Persona): กลุ่ม [SA] Social Anxiety (นักศึกษาที่ขี้อาย กังวลสายตาเพื่อน 
+หรือกลัวโดนตัดสินว่าถามค าถามง่ายเกินไป) 
+• ฟังก์ชันย่อยและการท างานบน UI: 
+o Anonymity Masking Toggle: ปุ่มสวิตช์เปิด-ปิดโหมดนิรนาม (Post as Anonymous) 
+บนหน้าจอร่างกระทู้ เมื่อคลิกเปิดใช้งาน ระบบจะซ่อนชื่อ-นามสกุล และอีเมลจริง 
+โดยจะแสดงผลบนหน้าเว็บบอร์ดเป็นชื่อสุ่ม เช่น "ผู้ใช้ไม่ระบุตัวตน" หรือ "Anonymous Student #12" 
+
+--- Page 2 ---
+o Asynchronous Board Design: โครงสร้างเว็บเว็บบอร์ดที่เน้นการตั้งกระทู้ทิ้งไว้ 
+ไม่มีการส่งสัญญาณเตือนเด้งรัวแบบแชทสด ช่วยลดแรงกดดันทางจิตวิทยาเรื่องพฤติกรรมความขี้เกรงใจ (Over-
+Polite) ในการตั้งค าถามช่วงกลางดึกหรือวันหยุด 
+o Back-end Traceability: แม้หน้าบ้านจะซ่อนชื่อเพื่อความสบายใจของผู้เรียน แต่ระบบหลังบ้าน (Admin 
+Dashboard) จะยังคงบันทึก Log ไอดีจริงของผู้โพสต์ไว้ 
+เพื่อป้องกันกรณีผู้ใช้งานโพสต์ข้อความสุ่มเสี่ยงหรือผิดกฎของชุมชน (Abuse Prevention) 
+• ระบบหลังบ้านที่รองรับ (Technical Backend): User Masking Logic (การสลับสิทธิ ์ การแสดงผลหน้าบ้าน) + 
+Admin Audit Logs Database 
+🛠️ เฟสที่ 2: Advanced Technical & Trust Features 
+(ฟังก์ชันเทคนิคขั้นสูง - Should Have) 
+3. ระบบรับรองความถูกต้องของค าตอบ (Verified Answer System) 
+• วัตถุประสงค์: สร้างแหล่งข้อมูลที่ถูกต้องที่สุดชิ้นเดียว (Single Source of Truth) เพื่อให้นักศึกษามั ่ นใจในข้อมูล 
+ไม่จ าค าตอบที่ผิดไปใช้ในการสอบ 
+• กลุ่มเป้าหมาย (Persona): กลุ่ม [UR] Unverified Reliability 
+(นักศึกษาที่ขาดความมั ่ นใจในความถูกต้องของข้อมูล บนอินเทอร์เน็ต/คอมมูนิตี้ทั ่ วไป) 
+• ฟังก์ชันย่อยและการท างานบน UI: 
+o Role-based Authorization & UI Change: ระบบตรวจจับบทบาทผู้ใช้ หากเป็นบัญชีระดับอาจารย์ 
+(Instructor) หรือพี่ผู้ช่วยสอน (TA) จะมีปุ่มพิเศษ [✓ Verify This Answer] 
+ปรากฏขึ้นที่มุมขวาบนของกล่องค าตอบของนักศึกษาคนอื่น 
+o Verified Endorsement Badge: เมื่ออาจารย์หรือ TA กดรับรอง 
+จะมีตราสัญลักษณ์เครื่องหมายติ๊กถูกสีเขียวเด่นชัด ✓ Verified Answer แปะอยู่บนกล่องค าตอบนั้นทันที 
+พร้อมระบุชื่อผู้รับรอง 
+o Pin to Top (Single Source of Truth): ค าตอบที่ได้รับการ Verified 
+จะถูกดึงขึ้นมาแสดงผลเป็นอันดับแรกสุดใต้กระทู้ถามทันที เพื่อให้นักศึกษาที่เข้ามาค้นหาเห็นค าตอบที่ถูกต้องได้ใน 1 
+วินาที โดยไม่ต้องเลื่อนหา 
+o Peer Rating Interface: แผงปุ่มลูกศรชี้ขึ้น-ลงพร้อมตัวเลขบอกคะแนนโหวต (Upvote/Downvote 
+Counters) ติดตั้งอยู่ที่ด้านซ้ายสุดของทุกกล่องค าตอบหลัก เพื่อให้นักศึกษาทั ่ วไปช่วยกันกดดันค าตอบที่ดีขึ้นบน 
+และคัดกรองค าตอบที่มั ่ วลงด้านล่าง 
+o Clarification Nested-Comment Line: พื้นที่คอมเมนต์ย่อยใต้กระทู้หลักที่มีลักษณะเยื้องขอบซ้าย 
+(Indent) และมีเส้นแนวตั้งเชื่อมโยงความสัมพันธ์ สามารถม้วนยืดหดได้ ส าหรับเปิดพื้นที่โต้ตอบซักถามข้อมูลเพิ่มเติม 
+
+--- Page 3 ---
+(Request Further Information Loop) ระหว่างผู้ถามและผู้ช่วยแกะบั ๊ ก 
+โดยแยกสัดส่วนออกจากค าตอบหลักชัดเจน 
+• ระบบหลังบ้านที่รองรับ (Technical Backend): Role-based Access Control (RBAC) + 
+Verification Status Table Logic + Crowdsourced Voting Counter Update 
+4. ระบบกล่องข้อความส าหรับเขียนโค้ด (Code Snippet Support) 
+• วัตถุประสงค์: เพื่อรองรับพฤติกรรมการเรียนของนักศึกษาสาย ICT/DST ที่ต้องการถาม-ตอบเรื่องซอร์สโค้ดและดีบั ๊ ก Error 
+ได้อย่างสะดวก 
+• กลุ่มเป้าหมาย (Persona): กลุ่ม [FC] Format Constraint (นักศึกษาที่ประสบปัญหาพิมพ์โค้ดในไลน์แล้วเละ 
+อ่านยาก บรรทัดเบี้ยว ไฮไลท์สีพัง) 
+• ฟังก์ชันย่อยและการท างานบน UI: 
+o Rich Text Editor & Dedicated Code Snippet Block: 
+กล่องสี่เหลี่ยมสีด าส าหรับวางโค้ดโดยเฉพาะ เมื่อวางซอร์สโค้ดแล้ว ระบบจะจัดหน้า แสดงเลขบรรทัด 
+และไฮไลต์สีสันตามหลักไวยากรณ์คอมพิวเตอร์ (Syntax Highlighting) โดยรองรับหลายภาษาหลักในหลักสูตร 
+เช่น Java, Python, C#, JavaScript, SQL 
+o Screenshot Inline Display / Uploader: ปุ่มกดแนบรูปภาพหรือระบบลากวาง (Drag & 
+Drop) ไฟล์ภาพถ่ายหน้าจอที่เป็น Log Error หรือ Exception ต่าง ๆ ให้แสดงผลแบบ Inline 
+ร่วมกันอยู่ภายในกล่องโค้ดเดียวกันอย่างเป็นระเบียบ ไม่กระจัดกระจาย 
+o Live Preview Sandbox: หน้าต่างแยกฝั่งขวา (Split-pane) ในหน้าจอร่างกระทู้ 
+เพื่อจ าลองหน้าตาโพสต์เสมือนจริงให้ผู้ถามได้ตรวจสอบความเรียบร้อยของโค้ด 
+และเห็นชัดเจนว่าชื่อจริงของตนเองถูกซ่อนเรียบร้อยแล้วก่อนกดส่ง 
+o Pre-Publishing Audit Badge: ตราสัญลักษณ์สีเขียวระบุชัดเจนว่า ✓ Pre-Publishing 
+Audit: Safe (No Personal Data Detected) แสดงผลในฝั่ง Preview 
+เพื่อยืนยันความปลอดภัยก่อนผู้ใช้กดปุ่มปล่อยข้อมูลถาวร [Publish Post] 
+• ระบบหลังบ้านที่รองรับ (Technical Backend): Markdown Renderer + Syntax Highlighting 
+Library + Image Compression & Optimization API 
+⏱️ เฟสที่ 3: Future Extension Features (ฟังก์ชันส่วนขยายในอนาคต - 
+Nice to Have) 
+5. ระบบตัวกรองวิเคราะห์ช่วงเวลาวิกฤต (Panic Period Filter) 
+• วัตถุประสงค์: เพื่อช่วยให้นักศึกษาสามารถสืบค้น คัดกรอง และเก็งหัวข้อส าคัญได้อย่างรวดเร็วในช่วง 1 สัปดาห์ก่อนสอบ 
+• กลุ่มเป้าหมาย (Persona): ทุกกลุ่มผู้ใช้ (เน้นนักศึกษาที่ก าลังเตรียมตัวสอบอย่างเร่งด่วน) 
+
+--- Page 4 ---
+• ฟังก์ชันย่อยและการท างานบน UI: 
+o    Panic Period Filter Button: ปุ่มตัวกรองรูปไฟสีส้มแดง วางอยู่ใต้แถบค้นหาหลักบนหน้าแรก 
+เมื่อผู้ใช้คลิกเปิดใช้งาน ระบบจะสลับธีมและรีเฟรชหน้าฟีดเพื่อดึงเฉพาะกระทู้ที่มีอัตราคนคลิกดู (Views) 
+หรือมีการโต้ตอบ (Engagement) สูงสุดในช่วง 7 วันล่าสุดขึ้นมาแสดงผลทันที เพื่อให้เห็นว่าเพื่อน ๆ 
+ก าลังติดปัญหาที่จุดไหนร่วมกันมากที่สุด 
+• ระบบหลังบ้านที่รองรับ (Technical Backend): Query Timestamp Filtering + Engagement 
+Weight Scoring Algorithm (Views + Replies + Upvotes) 
+6. ระบบแนะน าเนื้อหาการเรียนรู้เพิ่มเติม (Learning Suggestion) 
+• วัตถุประสงค์: วิเคราะห์สถิติความผิดพลาดเชิงเทคนิคที่เกิดขึ้นในระบบ เพื่อแนะน าจุดที่นักศึกษาควรกลับไปทบทวน 
+(พัฒนาต่อยอดจากความคิดเห็นปลายเปิดของผู้ใช้) 
+• กลุ่มเป้าหมาย (Persona): ทุกกลุ่มผู้ใช้ (นักศึกษาที่ต้องการพัฒนาทักษะเพิ่มเติม 
+และอาจารย์ที่ต้องการดูภาพรวมปัญหาของเด็ก) 
+• ฟังก์ชันย่อยและการท างานบน UI: 
+o Recommendation Widget: กล่องแนะน าเนื้อหาที่แสดงผลบน Dashboard 
+เมื่อระบบหลังบ้านตรวจพบแฮชแท็กค าถามที่เกี่ยวกับเรื่องนั้น ๆ หนาแน่น (เช่น ตรวจพบค าถามเกี่ยวกับ 
+#NullPointerException เยอะในช่วงสัปดาห์นี้) ตัว Widget จะแนะน าลิงก์สไลด์เรียน คลังข้อมูล 
+หรือวิดีโอทบทวนของวิชานั้น ๆ ที่เกี่ยวข้องขึ้นมาให้กดเรียนรู้เพิ่มเติมทันที 
+• ระบบหลังบ้านที่รองรับ (Technical Backend): Data Analytics & Log Statistical Tracking + 
+Tag Density Analysis Matrix 
+📊 ตารางสรุปความสอดคล้องภาพรวม (Traceability Matrix) 
+ล าดับ ชื่อฟังก์ชันหลัก 
+(Features) 
+ฟังก์ชันย่อยบน UI (UI 
+Elements) 
+แก้ปัญหาให้กลุ่มผู้ใช้ 
+(Persona) 
+ฟังก์ชันหลังบ้านที่ใช้รองรับ 
+(Backend) 
+1 Subject-based 
+Categorization 
+Subject Panel, 
+Pinned Repository, 
+Tag Cloud 
+[IL] 
+Information 
+Lost 
+Database 
+Relational Schema 
++ Cloud Storage 
+2 Anonymous 
+Posting Mode 
+Anonymity Toggle, 
+Asynchronous 
+Board 
+[SA] Social 
+Anxiety 
+User Masking Logic 
++ Admin Audit Logs 
+
+--- Page 5 ---
+3 
+Verified 
+Answer 
+System 
+Verified Badge, Pin 
+to Top, Peer Rating, 
+Nested Reply 
+[UR] 
+Unverified 
+Reliability 
+Role-based Access 
+Control (RBAC) + 
+Voting Logic 
+4 Code Snippet 
+Support 
+Code Block, Inline 
+Image, Live 
+Preview, Audit 
+Badge 
+[FC] Format 
+Constraint 
+Markdown 
+Renderer + Syntax 
+Highlight + Image 
+API 
+5 Panic Period 
+Filter 
+   Panic Filter 
+Button 
+ทุกกลุ่ม 
+(ช่วงใกล้สอบ) 
+Query Timestamp 
+Filter + Engagement 
+Algorithm 
+6 Learning 
+Suggestion 
+Recommendation 
+Widget 
+ทุกกลุ่ม 
+(พัฒนาองค์ความรู้) 
+Data Analytics + Tag 
+Density Tracking 
+ 

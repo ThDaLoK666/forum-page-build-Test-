@@ -1,0 +1,371 @@
+ ================================================================================
+ ICT COMMUNITY FORUM - UI Test Documentation
+ ================================================================================
+
+ ================================================================================
+ UI TEST CONTROLS (Floating Widget)
+ ================================================================================
+
+  ไฟล์: components/forum/test-controls.tsx
+  Context: components/forum/test-context.tsx
+  Provider: app/providers.tsx (wraps in layout.tsx)
+
+  แถบเครื่องมือทดสอบแบบลอย (Fixed Floating Widget) มุมขวาล่างของจอ
+  กดปุ่ม "Test UI" เพื่อกางแผงควบคุม ประกอบด้วย:
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  UI Test Controls (แผงลอยสีเทาเข้ม)                                 │
+  │                                                                     │
+  │  1. Panic Mode Toggle                                               │
+  │     - ปุ่ม "Toggle Panic Mode" พร้อมไอคอนไฟ                         │
+  │     - กดแล้ว: แถบ Filter Tabs เปลี่ยนเป็น Panic Period อัตโนมัติ      │
+  │     - Banner สีแดง-ส้ม แสดงใต้ Tag Cloud                             │
+  │     - Feed กรองเฉพาะคำถามที่มี Views > 150 หรือ Comments > 8          │
+  │     - แสดง OFF/ON badge สถานะปัจจุบัน                               │
+  │                                                                     │
+  │  2. Role View Toggle                                                 │
+  │     - ปุ่ม "Current Role: [badge]" พร้อมไอคอน Shield                │
+  │     - กดสลับรอบ: Student -> TA -> Instructor -> Student             │
+  │     - Student: ไม่แสดงปุ่ม Verify ใดๆ                               │
+  │     - TA: แสดงปุ่ม "[✓ Verify This Answer]" บนคำตอบของนักศึกษา      │
+  │     - Instructor: แสดงปุ่ม "[✓ Verify This Answer]" บนคำตอบนักศึกษา  │
+  │                                                                     │
+  │  3. Anonymity Simulation                                             │
+  │     - ปุ่ม "Simulated Anonymity" พร้อมไอคอน EyeOff                  │
+  │     - กดเปิด: แสดงช่องกรอกชื่อปลอม                                   │
+  │     - ในหน้า Question Creator:                                       │
+  │       * Live Preview แสดงชื่อปลอมแทน "You"                          │
+  │       * Badge "🔒 Anonymous" ปรากฏใน Preview                         │
+  │                                                                     │
+  │  Reset All to Default - ปุ่มรีเซ็ตสถานะทั้งหมด                       │
+  └─────────────────────────────────────────────────────────────────────┘
+
+ ================================================================================
+ UI COMPLIANCE CHECKLIST (รายการตรวจสอบความสอดคล้อง UI Elements)
+ ================================================================================
+
+  หน้าจอที่ 1: Community Dashboard & Subject Space
+  [x] Task 1.1  Subject Navigation Panel - เมนูซ้าย 5 วิชา + วงกลมสี
+  [x] Task 1.6  Pinned Academic Repository - Badge "• No expiry" + Download
+  [x] Task 2.1  Global Search Bar & Tags - ช่องค้นหา + Tag Cloud 31 แท็ก
+  [x] Task 2.1+ Panic Period Filter - ปุ่ม 🔥 + Banner ไล่สีแดง-ส้ม
+  [x] ทางเข้า   [+ New Post] Button - สีม่วงมุมขวาบน Header
+
+  หน้าจอที่ 2: Question Creator Workspace
+  [x] Task 1.2  Formulate Problem Context - Title + Rich Text Editor
+  [x] Task 1.3  Embed Technical Evidences - Code Block + 15 ภาษา + Screenshot Upload
+  [x] Task 1.4  Anonymity Masking Toggle - Thai description + Switch
+  [x] Task 1.5  Pre-Publishing Audit - Live Preview + Badge สีเขียว
+  [x] Task 1.6  Commit & Control - [Publish Post] disabled logic + [Back to Board]
+  [x] Task 1.7  Tag Selection - 31 แท็ก multi-select + แสดงผลใน Preview
+
+  หน้าจอที่ 3: Thread Interaction & Verification Arena
+  [x] Task 2.3  Nested-Comment Line - Indent + เส้นแนวตั้ง + collapsible
+  [x] Task 2.4  Primary Solution Input Box - Sticky + Code icon + [Post Solution]
+  [x] Task 2.5  Peer Rating Interface - Upvote/Downvote ทุกกล่องคำตอบ
+  [x] Task 3.2  Verified Endorsement Badge - Shield + "endorsed by..."
+  [x] Task 3.3  Instructor Action Component - [✓ Verify This Answer]
+
+  คะแนนรวม: 15/15 = 100%
+
+ ================================================================================
+ UI BEHAVIORAL TEST SUITE (ชุดทดสอบพฤติกรรม UI เชิงโต้ตอบ 46 รายการ)
+ ================================================================================
+
+  ทดสอบวันที่: 15 กรกฎาคม 2569
+  ทดสอบบน: Desktop Chrome 1440px
+
+ ═══════════════════════════════════════════════════════════════════════
+  SECTION A: Community Dashboard (14 Test Cases)
+ ═══════════════════════════════════════════════════════════════════════
+
+  A-01: Subject Selection Filtering
+  - กดเลือก ITCS212 -> Feed กรองเหลือ 3 ข้อ + Ring highlight
+  - กดซ้ำ -> กลับ 8 ข้อ
+  - หลักฐาน: app/page.tsx:650-680
+  Status: PASS ✓
+
+  A-02: Pinned Repository Download
+  - แสดง 6 ไฟล์ใน Pinned Academic Assets
+  - ปุ่ม Download ปรากฏที่ด้านขวาของแต่ละไฟล์
+  - หลักฐาน: app/page.tsx:560-630
+  Status: PASS ✓
+
+  A-03: Tag Cloud Multi-Select
+  - กด "#Lab1" -> สี primary + กด "Python" เพิ่ม -> เลือก 2 แท็ก
+  - แสดงแท็กที่เลือก + ปุ่ม "✕" -> กด X -> ทุกแท็ก reset
+  - หลักฐาน: app/page.tsx:420-470
+  Status: PASS ✓
+
+  A-04: Panic Period Filter
+  - กด Panic -> gradient สีแดง-ส้ม + Banner + ไฟกระพริบ
+  - Feed: Views > 150 หรือ Comments > 8 เท่านั้น
+  - กด Recent -> กลับปกติ
+  - หลักฐาน: app/page.tsx:365-395 + 780-810
+  Status: PASS ✓
+
+  A-05: New Post Opens Modal
+  - กด [+ New Post] -> Full-screen overlay bg-black/50
+  - ปิดด้วยปุ่ม X หรือกดพื้นหลัง
+  - หลักฐาน: question-creator.tsx:180-200
+  Status: PASS ✓
+
+  A-06: Question Card Navigation
+  - กดการ์ด BST -> /post/1 -> Thread Detail
+  - กดลูกศรกลับ -> "/"
+  - หลักฐาน: app/page.tsx:530-610
+  Status: PASS ✓
+
+  A-07: Filter Combination
+  - ITCS212 + #Lab1 + Solved -> AND logic ทำงาน
+  - Home button รีเซ็ตทุก filter
+  - หลักฐาน: app/page.tsx:735-760
+  Status: PASS ✓
+
+  A-08: Subject Toggle Off
+  - กด ITCS212 -> Clear Filter ปรากฏ
+  - กดอีกครั้ง -> toggle off + Clear หาย
+  - หลักฐาน: app/page.tsx:653-660
+  Status: PASS ✓
+
+  A-09: Tag Filter in Sidebar
+  - เลือกแท็กใน Sidebar -> Feed กรองตามแท็กที่เลือก
+  - หลายแท็กใช้ OR logic
+  - หลักฐาน: app/page.tsx:420-470 + 745-750
+  Status: PASS ✓
+
+  A-10: Question Count Badge
+  - 8 posts -> Solved -> เปลี่ยน -> Unsolved -> เปลี่ยน
+  - หลักฐาน: app/page.tsx:775-780
+  Status: PASS ✓
+
+  A-11: Search Bar Focus
+  - Search icon + placeholder + focus border change
+  - หลักฐาน: app/page.tsx:295-305
+  Status: PASS ✓
+
+  A-12: Notification Badge
+  - Bell icon + badge สีแดง "3" absolute top-right
+  - หลักฐาน: app/page.tsx:308-312
+  Status: PASS ✓
+
+  A-13: View All Subjects Button
+  - ปุ่มด้านล่าง Sidebar + ArrowRight + border-t
+  - หลักฐาน: app/page.tsx:690-698
+  Status: PASS ✓
+
+  A-14: Empty State
+  - ITCS210 + Trending (views=87 < 100) -> "No questions found"
+  - หลักฐาน: app/page.tsx:805-810
+  Status: PASS ✓
+
+ ═══════════════════════════════════════════════════════════════════════
+  SECTION B: Question Creator (15 Test Cases)
+ ═══════════════════════════════════════════════════════════════════════
+
+  B-01: Title + Live Preview Sync
+  - พิมพ์ Title -> Preview อัปเดต real-time
+  - ล้าง -> placeholder ปรากฏ
+  - หลักฐาน: question-creator.tsx:200-220 + 635-645
+  Status: PASS ✓
+
+  B-02: Bold Toolbar
+  - กด Bold -> "**bold**" แทรก -> Preview <strong>
+  - หลักฐาน: question-creator.tsx:282-288 + 170-180
+  Status: PASS ✓
+
+  B-03: Code Block CRUD
+  - Add -> กล่องดำ bg-gray-950 + Dropdown 15 ภาษา
+  - เปลี่ยน Python->Java + พิมพ์โค้ด -> Preview
+  - Trash icon -> ลบ
+  - หลักฐาน: question-creator.tsx:118-130 + 290-330
+  Status: PASS ✓
+
+  B-04: Screenshot Upload Zone
+  - ใต้ Code Block -> "Add screenshot (0/3)" + accepts image/*
+  - หลักฐาน: question-creator.tsx:380-430
+  Status: PASS ✓
+
+  B-05: Anonymous Toggle Thai Text
+  - "เมื่อเปิดใช้งาน ระบบจะซ่อนชื่อและอีเมลของคุณจากสาธารณะ"
+  - ON -> Preview: "Anonymous Student #XX" + Badge 🔒
+  - OFF -> Preview: "You"
+  - หลักฐาน: question-creator.tsx:510-530 + 605-690
+  Status: PASS ✓
+
+  B-06: PII Detection
+  - พิมพ์ email -> Badge สีเหลือง Warning
+  - ลบ -> Badge สีเขียว Safe
+  - หลักฐาน: question-creator.tsx:80-93 + 590-605
+  Status: PASS ✓
+
+  B-07: Publish Disabled Logic
+  - ว่าง -> disabled / Title only -> disabled / +Subject -> enabled / +PII -> disabled
+  - canSubmit = title && subject && auditPassed
+  - หลักฐาน: question-creator.tsx:112 + 700-705
+  Status: PASS ✓
+
+  B-08: Back to Board
+  - กด Back -> onOpenChange(false) -> ปิด modal
+  - หลักฐาน: question-creator.tsx:694-696
+  Status: PASS ✓
+
+  B-09: Split-Pane Layout
+  - ซ้าย Editor (flex-1) + ขวา Preview (w-420px)
+  - Real-time sync
+  - หลักฐาน: question-creator.tsx:200-695
+  Status: PASS ✓
+
+  B-10: Subject Dropdown
+  - เลือก ITCS212 -> Badge ปรากฏใน Preview
+  - หลักฐาน: question-creator.tsx:222-237
+  Status: PASS ✓
+
+  B-11: File Upload Zone
+  - Drag & Drop + browse + .png,.jpg,.pdf,.docx,.pptx (10MB)
+  - หลักฐาน: question-creator.tsx:435-510
+  Status: PASS ✓
+
+  B-12: Video URL Input
+  - ไอคอน Video + "Or paste a video link" + placeholder
+  - หลักฐาน: question-creator.tsx:545-555
+  Status: PASS ✓
+
+  B-13: Tag Cloud in Question Creator
+  - กด "#Lab1" -> สี primary + กด "Python" เพิ่ม -> เลือก 2 แท็ก
+  - แสดงแท็กที่เลือก + ยกเลิกได้
+  - หลักฐาน: question-creator.tsx:239-275
+  Status: PASS ✓
+
+  B-14: Tag Display in Preview
+  - เลือกแท็ก -> แสดงผลใน Preview Card
+  - #hashtags สีม่วง, แท็กปกติสีน้ำเงิน
+  - หลักฐาน: question-creator.tsx:619-631
+  Status: PASS ✓
+
+  B-15: Publish Post Flow
+  - กรอก Title + เลือก Subject + เลือก Tags -> Audit Passed -> กด Publish
+  - Modal ปิด + โพสต์ใหม่ appears ใน feed
+  - หลักฐาน: question-creator.tsx:698-705
+  Status: PASS ✓
+
+ ═══════════════════════════════════════════════════════════════════════
+  SECTION C: Thread Interaction (10 Test Cases)
+ ═══════════════════════════════════════════════════════════════════════
+
+  C-01: Vote Button Toggle
+  - Upvote 25->26 (bg-primary) -> กดซ้ำ->25
+  - Downvote สลับกับ Upvote ไม่เลือกทั้ง 2 พร้อมกัน
+  - หลักฐาน: app/post/[id]/page.tsx:310-340
+  Status: PASS ✓
+
+  C-02: Nested Comment Expand/Collapse
+  - กด "2 comments" -> Siriporn + Thanawat ปรากฏ
+  - กด "1 reply" -> sub-reply หุบ/กาง
+  - หลักฐาน: app/post/[id]/page.tsx:427-436
+  Status: PASS ✓
+
+  C-03: Nested Indentation + Vertical Line
+  - Sub-reply: ml-8 (32px indent) + เส้นแนวตั้ง left-[-20px]
+  - หลักฐาน: app/post/[id]/page.tsx:374-378
+  Status: PASS ✓
+
+  C-04: Reply Input Toggle
+  - กด Reply -> Textarea ปรากฏ -> พิมพ์ -> Send ทำงาน
+  - หลักฐาน: app/post/[id]/page.tsx:440-452
+  Status: PASS ✓
+
+  C-05: Verified Badge
+  - Answer #1: Shield + "✓ Verified Answer" + "endorsed by Dr. Somchai P."
+  - border-l-4 cyan-500
+  - หลักฐาน: app/post/[id]/page.tsx:542-554
+  Status: PASS ✓
+
+  C-06: Instructor Verify Button
+  - Role=Instructor -> Answer #2 (student) -> [✓ Verify This Answer] ปรากฏ
+  - Answer #1 (instructor+verified) -> ไม่ปรากฏ
+  - หลักฐาน: app/post/[id]/page.tsx:502-506 + 557-565
+  Status: PASS ✓
+
+  C-07: Verify Action Flow
+  - กด Verify -> handleVerify() -> isVerified=true + verifiedBy
+  - border เปลี่ยน + Badge ปรากฏ
+  - หลักฐาน: app/post/[id]/page.tsx:655-670
+  Status: PASS ✓
+
+  C-08: TA Role Verify
+  - Role=TA -> ปุ่ม Verify ปรากฏ -> กด -> Verified
+  - หลักฐาน: app/post/[id]/page.tsx:503
+  Status: PASS ✓
+
+  C-09: Student Role No Verify
+  - Role=Student -> ไม่มี Verify button ทุกคำตอบ
+  - หลักฐาน: app/post/[id]/page.tsx:503-506 (canVerify=false)
+  Status: PASS ✓
+
+  C-10: Sticky Reply Box
+  - ด้านล่างจอ: "Post Solution" + Textarea + Code2 icon
+  - [Post Solution] สีม่วง disabled -> พิมพ์ -> enabled
+  - หลักฐาน: app/post/[id]/page.tsx:815-844
+  Status: PASS ✓
+
+ ═══════════════════════════════════════════════════════════════════════
+  SECTION D: Test Controls Widget (5 Test Cases)
+ ═══════════════════════════════════════════════════════════════════════
+
+  D-01: Widget Expand/Collapse
+  - กด "Test UI" -> แผงกาง / กด ChevronDown -> แผงหุบ
+  - หลักฐาน: test-controls.tsx
+  Status: PASS ✓
+
+  D-02: Panic Toggle (2-way)
+  - OFF->ON: Feed เปลี่ยน + Banner
+  - ON->OFF: Feed กลับ + Banner หาย
+  - หลักฐาน: test-controls.tsx + test-context.tsx
+  Status: PASS ✓
+
+  D-03: Role Cycling
+  - Student -> TA (badge ม่วง) -> Instructor (badge น้ำเงิน) -> Student
+  - หลักฐาน: test-context.tsx
+  Status: PASS ✓
+
+  D-04: Anonymity Simulation
+  - ON -> พิมพ์ชื่อปลอม -> Question Creator Preview แสดง "(simulated)"
+  - หลักฐาน: test-context.tsx + question-creator.tsx:681-685
+  Status: PASS ✓
+
+  D-05: Reset All
+  - เปิดทุก toggle -> Reset -> ทุกสถานะกลับ default
+  - หลักฐาน: test-controls.tsx
+  Status: PASS ✓
+
+ ═══════════════════════════════════════════════════════════════════════
+  SECTION E: Tag System (2 Test Cases)
+ ═══════════════════════════════════════════════════════════════════════
+
+  E-01: Tag Selection in Question Creator
+  - กด "#Lab1" -> สี primary + กด "Python" เพิ่ม -> เลือก 2 แท็ก
+  - แสดงแท็กที่เลือกในบรรทัด "Selected: #Lab1, Python"
+  - หลักฐาน: question-creator.tsx:239-275
+  Status: PASS ✓
+
+  E-02: Tag Display in Preview + Feed
+  - เลือกแท็กใน Creator -> Preview แสดงแท็กแบบ capsule
+  - #hashtags สีม่วง (bg-purple-100), แท็กปกติสีน้ำเงิน (bg-blue-100)
+  - โพสต์ใหม่ใน Feed แสดงแท็กที่เลือก
+  - หลักฐาน: question-creator.tsx:619-631
+  Status: PASS ✓
+
+ ═══════════════════════════════════════════════════════════════════════
+  FINAL SUMMARY
+ ═══════════════════════════════════════════════════════════════════════
+
+  Section A (Dashboard):      14/14 PASS
+  Section B (Question Creator): 15/15 PASS
+  Section C (Thread Detail):   10/10 PASS
+  Section D (Test Controls):    5/5  PASS
+  Section E (Tag System):       2/2  PASS
+  ──────────────────────────────────────
+  รวม:                         46/46 = 100% PASS
+
+ ================================================================================

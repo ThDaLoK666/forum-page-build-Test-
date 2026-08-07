@@ -1,0 +1,379 @@
+================================================================================
+            ICT COMMUNITY FORUM - รายละเอียดฟีเจอร์และ UI ของเว็บไซต์
+================================================================================
+
+  เว็บไซต์ฟอรัมชุมชนสำหรับนักศึกษาคณะ ICT มหาวิทยาลัยมหิดล
+  ออกแบบมาสำหรับ Desktop View (ความกว้าง 1440px)
+  ใช้เทคโนโลยี: Next.js 16 (App Router) + React 19 + Tailwind CSS v4 + shadcn/ui
+  ระบบสี: oklch color space, ธีม Light/Dark mode
+
+================================================================================
+หน้าที่ 1: COMMUNITY DASHBOARD (หน้าหลัก - หน้า Feed คำถาม)
+================================================================================
+
+  URL: /
+  ไฟล์: app/page.tsx
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  HEADER (แถบบนสุด - Sticky)                                                 │
+  │  - โลโก้ ICT Mahidol University                                             │
+  │  - ชื่อเว็บ "ICT Forum" + ข้อความรอง "Mahidol University"                    │
+  │  - ช่องค้นหา Global Search พร้อมไอคอนแว่นขยาย                                │
+  │  - ปุ่ม "[+ New Post]" (ปุ่มสีม่วง/น้ำเงิน Primary)                          │
+  │  - ไอคอนกระดิ่งแจ้งเตือน (Notification Bell) + ตัวเลข badge สีแดง            │
+  │  - ไอคอนผู้ใช้ (User Profile)                                                │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────┐  ┌──────────────────────────────────────────────────┐
+  │                      │  │  MAIN FEED AREA                                  │
+  │  LEFT SIDEBAR        │  │                                                  │
+  │  (Left Navigation)   │  │  1. แถบหัวข้อ "Home Feed" + ปุ่ม Home            │
+  │                      │  │     + จำนวนโพสต์ที่แสดง                           │
+  │  ส่วน "My Subjects"  │  │                                                  │
+  │  - ไอคอนหนังสือ      │  │  2. แถบ Filter Tabs (แบบ pill/แคปซูล):           │
+  │  - รายชื่อวิชา 5 วิชา │  │     - All (ไม่มีไอคอน)                            │
+  │    พร้อมไอคอนสี      │  │     - 🔥 Panic Period → filter คำถามที่มี views > 150 │
+  │    กลมแต่ละวิชา:      │  │       หรือ comments > 8 ใน 7 วันล่าสุด            │
+  │    * ITCS210 (ม่วง)  │  │       จะเพิ่ม banner สีแดง-ส้มพร้อมไอคอนไฟกระพริบ │
+  │    * ITCS212 (ฟ้า)   │  │                                                  │
+  │    * ITCS332 (แดง)   │  │  3. Tag Cloud (ใน Sidebar):                        │
+  │    * ICCS340 (ชมพู)  │  │     18 แท็กแบบ capsule คลิกได้:                 │
+  │    * ITCS371 (ม่วง)  │  │     #Lab1-4, #Assignment1-3, Python, Java, SQL,  │
+  │                      │  │     JavaScript, TypeScript, C, C++, C#, HTML,     │
+  │  กดเลือกวิชาเพื่อ     │  │     CSS, PHP, Ruby, Go, Rust, Swift, OOP,        │
+  │  กรองคำถาม            │  │     Data Structures, Database, Normalization,     │
+  │                      │  │     Project Management, Agile, Exception Handling,│
+  │  ปุ่ม "Clear Filter" │  │     System Design, Scrum                         │
+  │                      │  │     กดเลือกหลายแท็กพร้อมกันได้                    │
+  │                      │  │     แสดงแท็กที่เลือก + ปุ่มลบ (✕)                 │
+  │                      │  │                                                  │
+  │                      │  │  4. Pinned Academic Assets (ใน Sidebar):            │
+  │                      │  │     - ไอคอนหมุดสีเหลือง                           │
+  │                      │  │     - หัวข้อ "Pinned Academic Assets" (+ จำนวนไฟล์) │
+  │                      │  │     - Badge "• No expiry" สีเหลือง               │
+  │                      │  │     - แสดงรายการไฟล์ปักหมุด 6 ไฟล์               │
+  │                      │  │     - แต่ละไฟล์: ไอคอนตามประเภท + ชื่อไฟล์       │
+  │                      │  │       + ขนาดไฟล์ + รหัสวิชา + ปุ่ม Download       │
+  │                      │  │                                                  │
+  │                      │  │  5. ป้าย Panic Period Mode                        │
+  │                      │  │     (แสดงเฉพาะตอนเลือก Panic filter):              │
+  │                      │  │     - พื้นหลังไล่สีแดง-ส้ม                         │
+  │                      │  │     - ไอคอนไฟกระพริบ                              │
+  │                      │  │     - ข้อความ "Panic Period Mode"                 │
+  │                      │  │     - คำอธิบาย "Showing questions with the         │
+  │                      │  │       highest views and replies..."               │
+  │                      │  │                                                  │
+  │                      │  │  6. รายการคำถาม (Question Cards):                  │
+  │                      │  │     แต่ละการ์ดประกอบด้วย:                           │
+  │                      │  │     - Badge "Solved" (เขียว) / "Verified" (ฟ้า)   │
+  │                      │  │     - เวลาที่โพสต์ (เช่น "2h ago")                 │
+  │                      │  │     - ชื่อคำถาม (ตัวหนังสือใหญ่)                  │
+  │                      │  │     - แท็กแบบ capsule (สีม่วงสำหรับ #hashtags,     │
+  │                      │  │       สีน้ำเงินสำหรับแท็กปกติ)                     │
+  │                      │  │     - รูปโปรไฟล์ผู้โพสต์ + ชื่อ + ชั้นปี           │
+  │                      │  │     - จำนวน view + comment                        │
+  │                      │  │     - Badge รหัสวิชาด้านล่าง                      │
+  │                      │  │     - คลิกได้ นำไปหน้า Thread Detail              │
+  └──────────────────────┘  └──────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  MODAL: สร้างคำถามใหม่ (QuestionCreator)                                   │
+  │  เปิดจากปุ่ม "[+ New Post]" ใน Header                                       │
+  │  แสดงผลเป็น centered modal (max-w-7xl) พื้นหลังดำโปร่งแสง (bg-black/50)    │
+  │                                                                             │
+  │  ┌─────────────────────────────────┐  ┌───────────────────────────────────┐  │
+  │  │  ฝั่งซ้าย: ตัวแก้ไข (Editor)     │  │  ฝั่งขวา: Live Preview            │  │
+  │  │                                 │  │                                   │  │
+  │  │  - ช่อง "Title" (Input บรรทัดเดียว)│  │  - หัวข้อ "Live Preview"          │  │
+  │  │  - Dropdown เลือกวิชา (Subject)  │  │  - Badge สีเขียว:                 │  │
+  │  │    ITCS210/212/332/ICCS340/371   │  │    "✓ Pre-Publishing Audit:       │  │
+  │  │  - กล่อง Tag Cloud (เลือกแท็ก):   │  │     Safe (No Personal Data        │  │
+  │  │    * 18 แท็กแบบ capsule           │  │     Detected)"                    │  │
+  │  │    * กดเลือกหลายแท็กพร้อมกัน     │  │    ตรวจจับ email, เบอร์โทร,       │  │
+  │  │    * แสดงแท็กที่เลือก             │  │    รหัสนักศึกษา, ชื่อจริง          │  │
+  │  │  - กล่อง Rich Text Description:  │  │  - การ์ดตัวอย่างคำถาม:             │  │
+  │  │    * แถบเครื่องมือ: Bold, Italic,│  │    * Badge "Anonymous" (ถ้าเปิด)  │  │
+  │  │      Bullet List, Numbered List, │  │    * Badge รหัสวิชา               │  │
+  │  │      Link, Code Block            │  │    * ชื่อคำถาม                     │  │
+  │  │    * กล่องพิมพ์ข้อความ            │  │    * แท็กที่เลือก (สีม่วง/น้ำเงิน)  │  │
+  │  │      (min-height 160px)          │  │    * เนื้อหา (markdown rendered) │  │
+  │  │  - กล่อง Code Snippet:           │  │    * โค้ดบล็อก (ถ้ามี)            │  │
+  │  │    * พื้นหลังสีดำ (dark theme)   │  │    * ไฟล์แนบ (ถ้ามี)             │  │
+  │  │    * Dropdown เลือกภาษา 15 ภาษา   │  │    * รูปโปรไฟล์ผู้โพสต์           │  │
+  │  │      (Python, Java, JS, TS,      │  │                                   │  │
+  │  │       C, C++, C#, SQL, HTML,     │  │                                   │  │
+  │  │       CSS, PHP, Ruby, Go,        │  │                                   │  │
+  │  │       Rust, Swift)              │  │                                   │  │
+  │  │    * ปุ่มลบ (Trash icon)         │  │                                   │  │
+  │  │  - ปุ่ม "+ Add Code Block"       │  │                                   │  │
+  │  │  - พื้นที่อัปโหลดไฟล์:            │  │                                   │  │
+  │  │    * Drag & Drop zone            │  │                                   │  │
+  │  │    * รองรับ .png, .jpg, .pdf,    │  │                                   │  │
+  │  │      .docx, .pptx ( maxSize 10MB)│  │                                   │  │
+  │  │    * แสดงตัวอย่างรูปภาพ           │  │                                   │  │
+  │  │  - ช่อง Video URL               │  │                                   │  │
+  │  │    (YouTube, ฯลฯ)                │  │                                   │  │
+  │  │  - Toggle "Post as Anonymous"    │  │                                   │  │
+  │  │    * Switch component            │  │                                   │  │
+  │  │    * แสดง "Anonymous Student     │  │                                   │  │
+  │  │      #XX" ใน preview             │  │                                   │  │
+  │  └─────────────────────────────────┘  └───────────────────────────────────┘  │
+  │                                                                             │
+  │  แถบปุ่มล่าง (Footer):                                                      │
+  │  - ปุ่ม "[← Back to Board]" (ปุ่มรอง/Outline)                               │
+  │  - ปุ่ม "[Publish Post]" (ปุ่มหลัก/Primary สีม่วง)                           │
+  │    * ปิดการใช้งานจนกว่าจะกรอกชื่อ, เลือกวิชา, และ Audit ผ่าน                 │
+  │    * canSubmit = title && subject && auditPassed                             │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+หน้าที่ 2: THREAD DETAIL & VERIFICATION ARENA (หน้ารายละเอียดคำถาม)
+================================================================================
+
+  URL: /post/[id]
+  ไฟล์: app/post/[id]/page.tsx
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  HEADER (แถบบนสุด - Sticky)                                                 │
+  │  - ปุ่มลูกศรกลับ (ArrowLeft) กลับไปหน้า "/"                                 │
+  │  - หัวข้อ "Question" + ชื่อวิชา                                               │
+  │  - ปุ่ม Bookmark (เก็บไว้ดูทีหลัง)                                            │
+  │  - ปุ่ม Share (แชร์)                                                         │
+  │  - ปุ่ม Delete (ไอคอน Trash) - เฉพาะโพสต์ของตัวเอง                │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  QUESTION CARD (กล่องคำถามหลัก)                                              │
+  │                                                                             │
+  │  - Badge สถานะ: "Solved" (เขียว) / "Verified" (ฟ้า)                         │
+  │  - Badge รหัสวิชา (สีตามวิชา)                                               │
+  │  - ชื่อคำถาม (ตัวหนังสือใหญ่ 2xl bold)                                       │
+  │  - ข้อมูลเวลา/มุมมอง/คำตอบ:                                                  │
+  │    * Clock icon + " Asked 2 hours ago"                                       │
+  │    * Eye icon + "234 views"                                                  │
+  │    * MessageCircle icon + "2 answers"                                        │
+  │                                                                             │
+  │  - ปุ่ม Vote (ด้านซ้าย):                                                     │
+  │    * VoteButton Up (ThumbsUp) + ตัวเลข counter                              │
+  │    * VoteButton Down (ThumbsDown)                                            │
+  │    * ปุ่ม Bookmark                                                          │
+  │                                                                             │
+  │  - เนื้อหาคำถาม (whitespace-pre-wrap, แสดง code blocks)                       │
+  │  - แท็กแบบ capsule                                                          │
+  │  - ข้อมูลผู้โพสต์:                                                           │
+  │    * รูปโปรไฟล์ Avatar (สี teal)                                              │
+  │    * ชื่อ + ชั้นปี + ภาควิชา                                                  │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  ANSWERS SECTION (ส่วนคำตอบ)                                                 │
+  │                                                                             │
+  │  - หัวข้อ "{N} Answers"                                                     │
+  │                                                                             │
+  │  แต่ละ Answer Card ประกอบด้วย:                                               │
+  │  ┌───────────────────────────────────────────────────────────────────┐      │
+  │  │  เส้นขอบซ้ายสีเขียว (Accepted) / ฟ้า (Verified) / โปร่งใส       │      │
+  │  │                                                                   │      │
+  │  │  - ปุ่ม Vote ด้านซ้าย:                                            │      │
+  │  │    * VoteButton Up + ตัวเลข counter                               │      │
+  │  │    * VoteButton Down                                              │      │
+  │  │    * ไอคอนถูกสีเขียว (ถ้า Accepted)                               │      │
+  │  │                                                                   │      │
+  │  │  - Badge "✓ Verified Answer" สีฟ้า (ถ้า Verified):                │      │
+  │  │    * ไอคอน Shield                                                 │      │
+  │  │    * ข้อความ "endorsed by {ชื่อ}"                                 │      │
+  │  │                                                                   │      │
+  │  │  - เนื้อหาคำตอบ (พร้อม code blocks)                               │      │
+  │  │                                                                   │      │
+  │  │  - ข้อมูลผู้ตอบ:                                                  │      │
+  │  │    * รูป Avatar สีตามบทบาท:                                        │      │
+  │  │      - น้ำเงิน = Instructor                                        │      │
+  │  │      - ม่วง = TA                                                  │      │
+  │  │      - เขียวอมฟ้า = Student                                        │      │
+  │  │    * Badge บทบาท: "INSTRUCTOR" (น้ำเงิน) / "TA" (ม่วง)              │      │
+  │  │    * ชื่อ + เวลา                                                   │      │
+  │  │                                                                   │      │
+  │  │  - ปุ่ม Share + More Options                                       │      │
+  │  │  - ปุ่ม Delete (ไอคอน Trash) - เฉพาะโพสต์ของตัวเอง                │      │
+  │  │  - ปุ่ม Copy Code (ใน reply) - คัดลอกโค้ดไป clipboard             │      │
+  │  │  - รองรับภาพแนบในความคิดเห็น (อัปโหลดภาพ)                      │      │
+  │  │                                                                   │      │
+  │  │  ──────────────────────────────────────────────────────────────    │      │
+  │  │  COMMENTS SECTION (ส่วนความคิดเห็น):                               │      │
+  │  │                                                                   │      │
+  │  │  - ปุ่ม "{N} comments" (.expand/collapse)                         │      │
+  │  │                                                                   │      │
+  │  │  - NestedReply Component (แสดงผลแบบ Multi-level):                   │      │
+  │  │    * ย่อหน้าซ้ายตาม depth (indentation)                           │      │
+  │  │    * เส้นแนวตั้งเชื่อมระหว่าง reply                                │      │
+  │  │    * ปุ่ม vote เล็ก (ThumbsUp/Down + counter)                     │      │
+  │  │    * Avatar สีตามบทบาท                                             │      │
+  │  │    * Badge บทบาท (ถ้า Instructor/TA)                               │      │
+  │  │    * เนื้อหาความคิดเห็น                                             │      │
+  │  │    * ปุ่ม "Reply"                                                  │      │
+  │  │    * ปุ่ม expand/collapse สำหรับ sub-replies                       │      │
+  │  │    * Recursive nesting (ซ้อนได้หลายชั้น)                            │      │
+  │  │                                                                   │      │
+  │  │  - ช่องพิมพ์ความคิดเห็นใหม่                                         │      │
+  │  │    (Textarea + ปุ่ม Send + รองรับอัปโหลดภาพ)                       │      │
+  │  └───────────────────────────────────────────────────────────────────┘      │
+  │                                                                             │
+  │  ┌───────────────────────────────────────────────────────────────────┐      │
+  │  │  RECOMMENDATION WIDGET (Sidebar ขวา - เฉพาะ Desktop)         │      │
+  │  │  - หัวข้อ "Recommended for you" พร้อมไอคอน Sparkles              │      │
+  │  │  - แสดงเนื้อหาที่เกี่ยวข้องตามแท็กของคำถาม                      │      │
+  │  │  - 3 ประเภท: Slides (สีน้ำเงิน), Video (สีแดง), Notes (สีเขียว)  │      │
+  │  │  - แต่ละรายการ: ไอคอนตามประเภท + ชื่อเรื่อง + แท็ก              │      │
+  │  │  - แสดงแบบ sticky (ติดด้านบนเมื่อ scroll)                    │      │
+  │  └───────────────────────────────────────────────────────────────────┘      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  STICKY REPLY BOX (กล่องตอบคำถามพื้นล่างจอ)                           │
+  │                                                                             │
+  │  - ป้าย "Post Solution" (ตัวหนังสือ bold)                                   │
+  │  - กล่อง Textarea (min-height 80px, max-height 150px)                       │
+  │  - ปุ่มแทรกโค้ด (Code2 icon) มุมขวาบนของกล่อง + รองรับอัปโหลดภาพได้     │
+  │  - ปุ่ม "[Post Solution]" (สีม่วง purple-600)                                │
+  │    * ปิดการใช้งานถ้ายังไม่พิมพ์                                              │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+รายละเอียด Component ที่ใช้ร่วมกัน (Reusable Components)
+================================================================================
+
+  1. VoteButton
+     - ปุ่มโหวตแนวตั้ง (Up/Down)
+     - แสดงตัวเลข counter ตรงกลาง
+     - toggle state (กดซ้ำเพื่อยกเลิก)
+
+  2. NestedReply
+     - คอมโพเนนต์ recursively render ความคิดเห็นแบบซ้อน
+     - depth tracking สำหรับ indentation
+     - เส้นเชื่อมแนวตั้ง (left border line)
+     - role-based avatar colors
+     - collapsible sub-replies
+     - รองรับ Code Block และ Image upload ใน reply
+
+  3. AnswerCard
+     - แสดงคำตอบแต่ละข้อ
+     - เส้นขอบซ้ายสีตามสถานะ
+     - badge ยืนยัน
+     - vote buttons
+     - comments section
+     - ปุ่ม Delete (เฉพาะ owner), Copy Code, Image paste
+
+  4. QuestionCard
+     - การ์ดคำถามในหน้า feed
+     - badge สถานะ solved/verified
+     - แท็ก + metadata
+     - คลิกได้ นำไปหน้า Thread Detail
+
+  5. FilterTabs
+     - แถบ pill/capsule เลื่อนแนวนอน (scrollable)
+     - ใช้บน Community Dashboard: All + Panic Period
+     - Panic Period มี style พิเศษ (gradient สีแดง + animate-pulse)
+
+  6. TagClouds
+     - คลัสเตอร์แท็กแบบ capsule
+     - multi-select + clear
+     - แสดงแท็กที่เลือกแล้ว + ปุ่มลบ (✕)
+     - 18 แท็กบน Community Dashboard
+
+  7. PinnedRepository
+     - กล่องปักหมุดไฟล์วิชาการ
+     - แสดง 6 ไฟล์ (PDF, DOCX, PPTX)
+     - ปุ่ม Download ที่ด้านขวาของแต่ละไฟล์
+     - รองรับ download progress modal
+
+  8. QuestionCreator
+     - Centered modal (max-w-7xl, full-width on mobile)
+     - Split-pane layout (editor + preview)
+     - PII detection audit (Pre-Publishing Audit)
+     - Tag selection (18 แท็ก แบบ multi-select)
+     - canSubmit validation: title && subject && auditPassed
+
+  9. Sidebar
+     - รวม My Subjects + Tag Cloud + Pinned Academic Assets
+     - กดเลือกวิชาเพื่อกรองคำถาม
+     - เลือกแท็กหลายตัวพร้อมกัน
+     - แสดงไฟล์ปักหมุดพร้อมปุ่ม Download
+
+  10. Recommendation Widget
+      - แสดงใน Thread Detail page (sidebar ขวา เฉพาะ Desktop)
+      - เนื้อหาที่เกี่ยวข้องตามแท็กของคำถาม
+      - 3 ประเภท: Slides, Video, Notes
+      - Sticky position (ติดด้านบนเมื่อ scroll)
+
+================================================================================
+ข้อมูลจำเพาะทางเทคนิค (Technical Specifications)
+================================================================================
+
+  Framework:       Next.js 16.2.4 (App Router, Turbopack)
+  UI Library:      React 19
+  Component System: shadcn/ui (New York style variant)
+  Styling:         Tailwind CSS v4.2.0 + oklch color system
+  Icons:           Lucide React v0.564.0
+  Form Handling:   React HookForm + Zod
+  Theme:           next-themes (Light/Dark mode support)
+  Fonts:           Geist + Geist Mono (via next/font)
+  Analytics:       Vercel Analytics
+
+  Routes:
+     /              -> Community Dashboard (Static)
+     /post/[id]     -> Thread Detail (Dynamic, SSR)
+
+  Color System (oklch):
+    Primary:       oklch(0.45 0.18 280) -> สีม่วงเข้ม
+    Secondary:     oklch(0.95 0.02 280) -> เทาอ่อนอมม่วง
+    Accent:        oklch(0.65 0.15 180) -> ฟ้า/teal
+    Destructive:   oklch(0.577 0.245 27.325) -> แดง
+
+  Subject Colors:
+    ITCS210:       #7c3aed (ม่วง)
+    ITCS212:       #0891b2 (ฟ้า/cyan)
+    ITCS332:       #dc2626 (แดง)
+    ICCS340:       #c026d3 (ชมพู/magenta)
+    ITCS371:       #7c3aed (ม่วง)
+
+  Roles & Badge Colors:
+    Student:       ไม่มี badge (avatar สี teal)
+    TA:            Badge ม่วง "TA"
+    Instructor:    Badge น้ำเงิน "INSTRUCTOR"
+
+  Answer Verification:
+    Accepted:      เส้นขอบเขียว + ไอคอนถูก
+    Verified:      เส้นขอบฟ้า + Shield icon + "endorsed by {name}"
+
+  Tag System:
+    Tags in Feed:        18 แท็ก (hashtags + technical + concept)
+    Tags in Creator:     18 แท็ก (multi-select, capsule style)
+    #hashtags:           สีม่วง (bg-purple-100)
+    technical tags:      สีน้ำเงิน (bg-blue-100)
+
+  File Types Supported (Upload):
+    Images:        .png, .jpg, .jpeg
+    Documents:     .pdf, .docx, .pptx
+    Max Size:      10MB ต่อไฟล์
+
+  Code Languages Supported:
+    Python, Java, JavaScript, TypeScript, C, C++, C#, SQL,
+    HTML, CSS, PHP, Ruby, Go, Rust, Swift
+
+  Security Features:
+    - Pre-Publishing Audit (PII Detection)
+    - ตรวจจับ: Email, เบอร์โทร, รหัสนักศึกษา, ชื่อจริง
+    - Badge สีเขียว "Safe" / สีเหลือง "Warning"
+
+  Question Data Model:
+    - id, title, content, tags, description, author, comments
+    - subject, subjectColor, isSolved, isVerified
+    - votes, views, replies, createdAt
+    - codeBlocks (CodeBlock[])
+    - files (FileUpload[])
+    - videoUrl, isAnonymous
+    - isMine (identifies owner's own posts for delete/edit)
+
+================================================================================
+หมายเหตุ: รายละเอียดการทดสอบ UI อยู่ในไฟล์ UI-TEST-DOCUMENTATION.txt
+================================================================================
