@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { useAuth } from "@/lib/auth";
 
 type UserRole = "student" | "ta" | "instructor";
 
@@ -27,18 +28,13 @@ const roleCycle: UserRole[] = ["student", "ta", "instructor"];
 
 export function TestProvider({ children }: { children: ReactNode }) {
   const [panicMode, setPanicMode] = useState(false);
-  const [currentRole, setCurrentRole] = useState<UserRole>("student");
+  const { uiRole: currentRole } = useAuth();
   const [anonymitySimulated, setAnonymitySimulated] = useState(false);
   const [simulatedName, setSimulatedName] = useState("Test Student");
 
   const togglePanicMode = useCallback(() => setPanicMode((p) => !p), []);
 
-  const cycleRole = useCallback(() => {
-    setCurrentRole((prev) => {
-      const idx = roleCycle.indexOf(prev);
-      return roleCycle[(idx + 1) % roleCycle.length];
-    });
-  }, []);
+  const cycleRole = useCallback(() => {}, []);
 
   const toggleAnonymitySimulated = useCallback(
     () => setAnonymitySimulated((p) => !p),

@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useTestContext } from "./test-context";
+import { errMsg } from "@/lib/supabase";
 import { CodeBlock, CodeEditor } from "./code-block";
 
 const tagClouds = [
@@ -60,6 +61,7 @@ interface CodeBlock {
 }
 
 interface FileUpload {
+  file?: File;
   id: string;
   name: string;
   type: string;
@@ -104,7 +106,7 @@ interface Question {
 interface QuestionCreatorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPostCreated?: (question: Question) => number;
+  onPostCreated?: (question: Question) => Promise<number>;
 }
 
 const subjects = [
@@ -124,13 +126,11 @@ function detectPersonalData(text: string): string[] {
   const issues: string[] = [];
   const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
   const phoneRegex = /(\+66|0)\d{2,3}[-.\s]?\d{3}[-.\s]?\d{3,4}/g;
-  const studentIdRegex = /\b\d{8,10}\b/g;
-  const namePatterns = /\b(Siriporn|Thanawat|Nattapong|Pornpimol|Kittipat|Supakorn|Sarawut|Apinya)\b/gi;
+  const studentIdRegex = /\b\d{7,10}\b/g;
 
   if (emailRegex.test(text)) issues.push("Email address detected");
   if (phoneRegex.test(text)) issues.push("Phone number detected");
   if (studentIdRegex.test(text)) issues.push("Student ID detected");
-  if (namePatterns.test(text)) issues.push("Real name detected");
 
   return issues;
 }
@@ -304,6 +304,7 @@ export function QuestionCreator({ open, onOpenChange, onPostCreated }: QuestionC
       const reader = new FileReader();
       reader.onload = (e) => {
         const newFile: FileUpload = {
+          file,
           id: `file-${Date.now()}-${Math.random()}`,
           name: file.name,
           type: file.type,
@@ -363,7 +364,6 @@ export function QuestionCreator({ open, onOpenChange, onPostCreated }: QuestionC
     setIsSubmitting(true);
     try {
       // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 800));
 
       if (onPostCreated && title && subject) {
         const anonName = `Anonymous Student #${anonPreviewNumber}`;
@@ -371,7 +371,7 @@ export function QuestionCreator({ open, onOpenChange, onPostCreated }: QuestionC
           ? [...new Set([...tags, "#ติวก่อนสอบ", "#StudyGroup"])]
           : tags;
 
-        const newId = onPostCreated({
+        const newId = await onPostCreated({
           id: Date.now(),
           title,
           tags: finalTags,
@@ -421,7 +421,7 @@ export function QuestionCreator({ open, onOpenChange, onPostCreated }: QuestionC
       }
     } catch (error) {
       toast.error("Failed to publish", {
-        description: "Please try again in a moment.",
+        description: errMsg(error),
       });
     } finally {
       setIsSubmitting(false);

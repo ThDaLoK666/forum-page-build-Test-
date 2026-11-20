@@ -1,6 +1,12 @@
 "use client";
 
 import { use, useState, useEffect, useRef } from "react";
+import { useAuth } from "@/lib/auth";
+import * as D from "@/lib/data";
+import { errMsg } from "@/lib/supabase";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Flag } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
@@ -87,6 +93,7 @@ interface NestedReply {
   };
   votes: number;
   createdAt: string;
+  isMine?: boolean;
   replies?: NestedReply[];
 }
 
@@ -105,6 +112,7 @@ interface Answer {
   isVerified: boolean;
   verifiedBy?: string;
   createdAt: string;
+  isMine?: boolean;
   comments: NestedReply[];
 }
 
@@ -146,6 +154,7 @@ interface Question {
   videoUrl?: string;
   isAnonymous?: boolean;
   isMine?: boolean;
+  joined?: boolean;
   // Study Session fields
   isStudySession?: boolean;
   sessionDate?: string;
@@ -156,381 +165,6 @@ interface Question {
   sessionCurrentParticipants?: number;
   sessionMeetingType?: "in-person" | "online" | "hybrid";
 }
-
-// ============ DATA ============
-const STUDY_SESSION_TAGS = ["#ติวก่อนสอบ", "#StudyGroup"];
-
-const questionsData: Record<string, Question> = {
-  "9001": {
-    id: 9001,
-    title: "📚 ITCS212 - ติวก่อนสอบ Data Structures: BST & Tree Traversal",
-    content: `นัดติวข้อสอบ ITCS212 เนื้อหา Binary Search Tree, AVL Tree, และ Tree Traversal ทุกคนเตรียมโจทย์มาด้วยนะครับ จะมีสรุป cheat sheet ให้
-
-**เนื้อหาที่จะติว:**
-- Binary Search Tree (BST) operations
-- AVL Tree rotations
-- Tree Traversal (In-order, Pre-order, Post-order, Level-order)
-- Time complexity analysis
-
-**สิ่งที่ต้องเตรียม:**
-- ปากกา + กระดาษ
-- แล็ปท็อป (ถ้ามี)
-- โจทย์จาก Lab ที่ผ่านมา`,
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "Data Structures", "BST", "Tree"],
-    author: { name: "Siriporn K.", initials: "SK", year: "Year 2", department: "Computer Science" },
-    votes: 18,
-    views: 187,
-    subject: "ITCS212",
-    subjectColor: "#0891b2",
-    isSolved: false,
-    isVerified: false,
-    createdAt: "3 hours ago",
-    answers: [],
-    isStudySession: true,
-    sessionDate: "2026-08-08",
-    sessionTime: "14:00 - 17:00",
-    sessionLocation: "ห้อง 101 ตึก Computer Lab",
-    sessionLink: "https://meet.ict-mahidol.ac.th/bst-review",
-    sessionMaxParticipants: 20,
-    sessionCurrentParticipants: 14,
-    sessionMeetingType: "in-person",
-  },
-  "9002": {
-    id: 9002,
-    title: "📚 ICCS340 - ติว SQL JOIN & Normalization ก่อนสอบ midterm",
-    content: `รวมตัวติว SQL ตั้งแต่ INNER JOIN จนถึง 3NF/BCNF มีแบบฝึกหัดเตรียมมาให้ทำกัน ใครมีโจทย์ยากๆ เอามาแชร์ได้เลย!
-
-**เนื้อหาที่จะติว:**
-- SQL JOIN types (INNER, LEFT, RIGHT, FULL)
-- Subqueries
-- Normalization (1NF, 2NF, 3NF, BCNF)
-- Practice problems`,
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "SQL", "Database", "JOIN"],
-    author: { name: "Thanawat P.", initials: "TP", year: "Year 3", department: "Computer Science" },
-    votes: 14,
-    views: 142,
-    subject: "ICCS340",
-    subjectColor: "#c026d3",
-    isSolved: false,
-    isVerified: false,
-    createdAt: "5 hours ago",
-    answers: [],
-    isStudySession: true,
-    sessionDate: "2026-08-07",
-    sessionTime: "13:00 - 15:30",
-    sessionLocation: "Zoom Meeting",
-    sessionLink: "https://zoom.us/j/1234567890",
-    sessionMaxParticipants: 30,
-    sessionCurrentParticipants: 22,
-    sessionMeetingType: "online",
-  },
-  "9003": {
-    id: 9003,
-    title: "📚 ITCS210 - ติว Java Exception Handling & OOP Concepts",
-    content: `ติว Java สำหรับข้อสอบ midterm เนื้อหา try-catch, custom exceptions, และ OOP principles ที่จำเป็น ทุก level เข้าร่วมได้!
-
-**เนื้อหาที่จะติว:**
-- Try-catch-finally blocks
-- Custom Exceptions
-- OOP Principles (Encapsulation, Inheritance, Polymorphism, Abstraction)
-- Practice problems`,
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "Java", "OOP", "Exception"],
-    author: { name: "Nattapong S.", initials: "NS", year: "Year 1", department: "Computer Science" },
-    votes: 11,
-    views: 128,
-    subject: "ITCS210",
-    subjectColor: "#7c3aed",
-    isSolved: false,
-    isVerified: false,
-    createdAt: "8 hours ago",
-    answers: [],
-    isStudySession: true,
-    sessionDate: "2026-08-06",
-    sessionTime: "18:00 - 20:00",
-    sessionLocation: "ห้อง 205 ตึก IT",
-    sessionLink: "",
-    sessionMaxParticipants: 15,
-    sessionCurrentParticipants: 9,
-    sessionMeetingType: "in-person",
-  },
-  "9004": {
-    id: 9004,
-    title: "📚 ITCS332 - ติว UML Diagram & System Design โค้งสุดท้าย",
-    content: `สรุปเนื้อหา UML ทั้ง Use Case, Class, Sequence, Activity Diagram พร้อมตัวอย่างโจทย์จริงจากข้อสอบปีก่อนๆ
-
-**เนื้อหาที่จะติว:**
-- Use Case Diagram
-- Class Diagram
-- Sequence Diagram
-- Activity Diagram
-- ข้อสอบจริงจากปีก่อน`,
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "UML", "System Design"],
-    author: { name: "Pornpimol C.", initials: "PC", year: "Year 3", department: "Computer Science" },
-    votes: 16,
-    views: 203,
-    subject: "ITCS332",
-    subjectColor: "#dc2626",
-    isSolved: false,
-    isVerified: false,
-    createdAt: "2 hours ago",
-    answers: [],
-    isStudySession: true,
-    sessionDate: "2026-08-09",
-    sessionTime: "09:00 - 12:00",
-    sessionLocation: "Hall A, Building 3",
-    sessionLink: "",
-    sessionMaxParticipants: 25,
-    sessionCurrentParticipants: 19,
-    sessionMeetingType: "in-person",
-  },
-  "9005": {
-    id: 9005,
-    title: "📚 ITCS371 - ติว Agile & Scrum สำหรับข้อสอบ final",
-    content: `ติว Agile Methodology, Scrum Framework, Sprint Planning ทั้ง theory และ practice มี quiz ทดสอบความเข้าใจให้ด้วย
-
-**เนื้อหาที่จะติว:**
-- Agile Manifesto & Principles
-- Scrum Framework (Roles, Events, Artifacts)
-- Sprint Planning & Estimation
-- Kanban vs Scrum`,
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "Agile", "Scrum", "Project Management"],
-    author: { name: "Sarawut M.", initials: "SM", year: "Year 4", department: "Computer Science" },
-    votes: 9,
-    views: 95,
-    subject: "ITCS371",
-    subjectColor: "#7c3aed",
-    isSolved: false,
-    isVerified: false,
-    createdAt: "6 hours ago",
-    answers: [],
-    isStudySession: true,
-    sessionDate: "2026-08-10",
-    sessionTime: "14:00 - 16:00",
-    sessionLocation: "Online (Google Meet)",
-    sessionLink: "https://meet.google.com/abc-defg-hij",
-    sessionMaxParticipants: 40,
-    sessionCurrentParticipants: 28,
-    sessionMeetingType: "online",
-  },
-  "1": {
-    id: 1,
-    title: "How to implement Binary Search Tree in Python?",
-    content: `I'm trying to implement a Binary Search Tree (BST) in Python for my ITCS212 Data Structures class. I understand the basic concept but I'm having trouble with the insertion and deletion operations.
-
-Here's what I have so far:
-
-\`\`\`python
-class Node:
-    def __init__(self, value):
-        self.value = value
-        self.left = None
-        self.right = None
-
-class BST:
-    def __init__(self):
-        self.root = None
-    
-    def insert(self, value):
-        # How do I implement this?
-        pass
-\`\`\`
-
-Can someone help me understand:
-1. How to properly insert nodes while maintaining BST property?
-2. How to handle edge cases like duplicate values?
-3. What's the time complexity for insertion?
-
-Any help would be appreciated!`,
-    tags: ["Python", "Data Structures", "BST"],
-    author: {
-      name: "Siriporn K.",
-      initials: "SK",
-      year: "Year 2",
-      department: "Computer Science",
-    },
-    votes: 15,
-    views: 234,
-    subject: "ITCS212",
-    subjectColor: "#0891b2",
-    isSolved: true,
-    isVerified: true,
-    createdAt: "2 hours ago",
-    answers: [
-      {
-        id: 1,
-        content: `Here's a complete implementation of the insert method for your BST:
-
-\`\`\`python
-def insert(self, value):
-    if self.root is None:
-        self.root = Node(value)
-    else:
-        self._insert_recursive(self.root, value)
-
-def _insert_recursive(self, node, value):
-    if value < node.value:
-        if node.left is None:
-            node.left = Node(value)
-        else:
-            self._insert_recursive(node.left, value)
-    elif value > node.value:
-        if node.right is None:
-            node.right = Node(value)
-        else:
-            self._insert_recursive(node.right, value)
-    # If value == node.value, we ignore duplicates
-\`\`\`
-
-**Time Complexity:**
-- Average case: O(log n) - when the tree is balanced
-- Worst case: O(n) - when the tree becomes a linked list (all nodes on one side)
-
-For handling duplicates, you have options:
-1. Ignore them (as shown above)
-2. Allow duplicates on one side (e.g., left for <=, right for >)
-3. Keep a count in each node`,
-        author: {
-          name: "Dr. Somchai P.",
-          initials: "SP",
-          year: "Instructor",
-          department: "Computer Science",
-          role: "instructor",
-        },
-        votes: 25,
-        isAccepted: true,
-        isVerified: true,
-        verifiedBy: "Dr. Somchai P.",
-        createdAt: "1 hour ago",
-        comments: [
-          {
-            id: 101,
-            content: "Thank you so much! This really helps me understand the recursive approach.",
-            author: {
-              name: "Siriporn K.",
-              initials: "SK",
-              year: "Year 2",
-              department: "Computer Science",
-              role: "student",
-            },
-            votes: 3,
-            createdAt: "45 mins ago",
-            replies: [
-              {
-                id: 102,
-                content: "Glad I could help! Feel free to ask if you have more questions about deletion.",
-                author: {
-                  name: "Dr. Somchai P.",
-                  initials: "SP",
-                  year: "Instructor",
-                  department: "Computer Science",
-                  role: "instructor",
-                },
-                votes: 2,
-                createdAt: "30 mins ago",
-              },
-            ],
-          },
-          {
-            id: 103,
-            content: "Can you also show how to handle the deletion case with two children?",
-            author: {
-              name: "Thanawat P.",
-              initials: "TP",
-              year: "Year 3",
-              department: "Computer Science",
-              role: "student",
-            },
-            votes: 5,
-            createdAt: "20 mins ago",
-          },
-        ],
-      },
-      {
-        id: 2,
-        content: `Adding to the answer above, here's how you can implement the search and delete operations as well:
-
-\`\`\`python
-def search(self, value):
-    return self._search_recursive(self.root, value)
-
-def _search_recursive(self, node, value):
-    if node is None or node.value == value:
-        return node
-    if value < node.value:
-        return self._search_recursive(node.left, value)
-    return self._search_recursive(node.right, value)
-\`\`\`
-
-For deletion, you need to handle three cases:
-1. Node has no children (leaf) - just remove it
-2. Node has one child - replace with child
-3. Node has two children - replace with inorder successor`,
-        author: {
-          name: "Thanawat P.",
-          initials: "TP",
-          year: "Year 3",
-          department: "Computer Science",
-          role: "student",
-        },
-        votes: 8,
-        isAccepted: false,
-        isVerified: false,
-        createdAt: "45 mins ago",
-        comments: [
-          {
-            id: 201,
-            content: "The inorder successor approach is important for maintaining BST property after deletion.",
-            author: {
-              name: "Nattapong S.",
-              initials: "NS",
-              year: "Year 1",
-              department: "Computer Science",
-              role: "student",
-            },
-            votes: 2,
-            createdAt: "30 mins ago",
-          },
-        ],
-      },
-    ],
-  },
-  "2": {
-    id: 2,
-    title: "What's the difference between SQL JOIN types?",
-    content: `I'm confused about the different types of JOINs in SQL. Can someone explain the difference between INNER JOIN, LEFT JOIN, RIGHT JOIN, and FULL OUTER JOIN with examples?`,
-    tags: ["SQL", "Database", "JOIN"],
-    author: {
-      name: "Thanawat P.",
-      initials: "TP",
-      year: "Year 3",
-      department: "Computer Science",
-    },
-    votes: 12,
-    views: 189,
-    subject: "ICCS340",
-    subjectColor: "#c026d3",
-    isSolved: true,
-    isVerified: true,
-    createdAt: "5 hours ago",
-    answers: [],
-  },
-};
-
-const defaultQuestion: Question = {
-  id: 0,
-  title: "Question not found",
-  content: "This question does not exist or has been removed.",
-  tags: [],
-  author: { name: "Unknown", initials: "??", year: "", department: "" },
-  votes: 0,
-  views: 0,
-  subject: "",
-  subjectColor: "#888888",
-  isSolved: false,
-  isVerified: false,
-  createdAt: "",
-  answers: [],
-};
 
 // ============ RECOMMENDATION DATA ============
 const recommendations: Record<string, { title: string; type: "slide" | "video" | "notes"; url: string; tag: string }[]> = {
@@ -560,6 +194,72 @@ const recommendations: Record<string, { title: string; type: "slide" | "video" |
     { title: "Study Tips for Finals", type: "slide", url: "#", tag: "General" },
   ],
 };
+
+// ============ REPORT BUTTON ============
+function ReportButton({ type, id, label = false }: { type: "question" | "answer" | "comment"; id: number; label?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    if (reason.trim().length < 3) return toast.error("กรุณาระบุเหตุผลอย่างน้อย 3 ตัวอักษร");
+    setBusy(true);
+    try {
+      await D.reportContent(type, id, reason.trim());
+      toast.success("ส่งรายงานแล้ว", { description: "ผู้ดูแลระบบจะตรวจสอบ" });
+      setOpen(false); setReason("");
+    } catch (e) { toast.error("ส่งรายงานไม่สำเร็จ", { description: errMsg(e) }); } finally { setBusy(false); }
+  };
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors" title="รายงานเนื้อหาไม่เหมาะสม">
+        <Flag className="w-3 h-3" />{label && "Report"}
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>รายงานเนื้อหาที่ไม่เหมาะสม</DialogTitle></DialogHeader>
+          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="เช่น ใช้คำหยาบ มีข้อมูลส่วนตัว เฉลยข้อสอบ" maxLength={500} />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>ยกเลิก</Button>
+            <Button onClick={submit} disabled={busy}>ส่งรายงาน</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+// ============ EDIT QUESTION ============
+function EditQuestionDialog({ q, open, onOpenChange }: { q: Question; open: boolean; onOpenChange: (o: boolean) => void }) {
+  const [title, setTitle] = useState(q.title);
+  const [body, setBody] = useState(q.content);
+  const [tags, setTags] = useState(q.tags.join(", "));
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    if (title.trim().length < 5) return toast.error("หัวข้อต้องยาวอย่างน้อย 5 ตัวอักษร");
+    setBusy(true);
+    try {
+      await D.updateQuestion(q.id, title.trim(), body, tags.split(",").map((t) => t.trim()).filter(Boolean));
+      toast.success("แก้ไขกระทู้แล้ว");
+      window.location.reload();
+    } catch (e) { toast.error("แก้ไขไม่สำเร็จ", { description: errMsg(e) }); setBusy(false); }
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader><DialogTitle>แก้ไขกระทู้</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} />
+          <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[140px]" />
+          <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="แท็ก คั่นด้วยจุลภาค เช่น Java, #Lab1" />
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>ยกเลิก</Button>
+          <Button onClick={save} disabled={busy}>บันทึก</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // ============ VOTE BUTTON COMPONENT ============
 function VoteButton({
@@ -696,11 +396,14 @@ function readImageAsMarker(file: File): Promise<string> {
 // ============ NESTED REPLY COMPONENT ============
 function NestedReply({
   reply,
+  answerId,
   depth = 0,
 }: {
   reply: NestedReply;
+  answerId: number;
   depth?: number;
 }) {
+  const { session } = useAuth();
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [replyCodeBlocks, setReplyCodeBlocks] = useState<CodeBlock[]>([]);
@@ -714,7 +417,7 @@ function NestedReply({
   const [editText, setEditText] = useState(reply.content);
   const [content, setContent] = useState(reply.content);
   const [deleted, setDeleted] = useState(false);
-  const isMine = reply.author.name === "You";
+  const isMine = !!reply.isMine;
 
   // Nested replies are re-ordered by score so the best clarification floats up
   const sortedReplies = [...localReplies].sort((a, b) => {
@@ -742,30 +445,18 @@ function NestedReply({
     );
   };
 
-  const handleAddReply = () => {
+  const handleAddReply = async () => {
     if (!replyText.trim() && replyCodeBlocks.length === 0) return;
     const codeContent = replyCodeBlocks
       .map((b) => `\n\`\`\`${b.language.toLowerCase()}\n${b.code}\n\`\`\``)
       .join("");
-    const fullContent = replyText + codeContent;
-    const newReply = {
-      id: Date.now(),
-      content: fullContent,
-      author: {
-        name: "You",
-        initials: "YO",
-        year: "Year 2",
-        department: "Computer Science",
-        role: "student" as const,
-      },
-      votes: 0,
-      createdAt: "just now",
-      replies: [],
-    };
-    setLocalReplies((prev) => [...prev, newReply]);
-    setReplyText("");
-    setReplyCodeBlocks([]);
-    setShowReplyInput(false);
+    try {
+      const newReply = await D.postComment(answerId, reply.id, replyText + codeContent, session!.user.id);
+      setLocalReplies((prev) => [...prev, newReply]);
+      setReplyText("");
+      setReplyCodeBlocks([]);
+      setShowReplyInput(false);
+    } catch (e) { toast.error("ตอบกลับไม่สำเร็จ", { description: errMsg(e) }); }
   };
 
   const getRoleBadge = (role: string) => {
@@ -869,11 +560,14 @@ function NestedReply({
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  onClick={() => {
+                  onClick={async () => {
                     if (!editText.trim()) return;
-                    setContent(editText);
-                    setIsEditing(false);
-                    toast.success("แก้ไขคอมเมนต์แล้ว");
+                    try {
+                      await D.editRow("comments", reply.id, editText);
+                      setContent(editText);
+                      setIsEditing(false);
+                      toast.success("แก้ไขคอมเมนต์แล้ว");
+                    } catch (e) { toast.error("แก้ไขไม่สำเร็จ", { description: errMsg(e) }); }
                   }}
                 >
                   บันทึก
@@ -901,6 +595,7 @@ function NestedReply({
               <Reply className="w-3 h-3" />
               Reply
             </button>
+            {!isMine && <ReportButton type="comment" id={reply.id} />}
             {isMine && !isEditing && (
               <>
                 <button
@@ -911,7 +606,7 @@ function NestedReply({
                   Edit
                 </button>
                 <button
-                  onClick={() => { setDeleted(true); toast.success("ลบคอมเมนต์แล้ว"); }}
+                  onClick={async () => { try { await D.softDelete("comments", reply.id); setDeleted(true); toast.success("ลบคอมเมนต์แล้ว"); } catch (e) { toast.error("ลบไม่สำเร็จ", { description: errMsg(e) }); } }}
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
                 >
                   <Trash2 className="w-3 h-3" />
@@ -1030,7 +725,7 @@ function NestedReply({
           {!collapsed && localReplies.length > 0 && (
             <div className="mt-2">
               {sortedReplies.map((r) => (
-                <NestedReply key={r.id} reply={r} depth={depth + 1} />
+                <NestedReply key={r.id} reply={r} answerId={answerId} depth={depth + 1} />
               ))}
             </div>
           )}
@@ -1055,6 +750,11 @@ function AnswerCard({
   /** the post author can mark one answer as the accepted solution */
   canAccept?: boolean;
 }) {
+  const { session } = useAuth();
+  const [answerContent, setAnswerContent] = useState(answer.content);
+  const [editingAnswer, setEditingAnswer] = useState(false);
+  const [answerEdit, setAnswerEdit] = useState(answer.content);
+  const [answerGone, setAnswerGone] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentCodeBlocks, setCommentCodeBlocks] = useState<CodeBlock[]>([]);
@@ -1089,29 +789,17 @@ function AnswerCard({
     );
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!commentText.trim() && commentCodeBlocks.length === 0) return;
     const codeContent = commentCodeBlocks
       .map((b) => `\n\`\`\`${b.language.toLowerCase()}\n${b.code}\n\`\`\``)
       .join("");
-    const fullContent = commentText + codeContent;
-    const newComment = {
-      id: Date.now(),
-      content: fullContent,
-      author: {
-        name: "You",
-        initials: "YO",
-        year: "Year 2",
-        department: "Computer Science",
-        role: "student" as const,
-      },
-      votes: 0,
-      createdAt: "just now",
-      replies: [],
-    };
-    setLocalComments((prev) => [...prev, newComment]);
-    setCommentText("");
-    setCommentCodeBlocks([]);
+    try {
+      const newComment = await D.postComment(answer.id, null, commentText + codeContent, session!.user.id);
+      setLocalComments((prev) => [...prev, newComment]);
+      setCommentText("");
+      setCommentCodeBlocks([]);
+    } catch (e) { toast.error("ส่งความคิดเห็นไม่สำเร็จ", { description: errMsg(e) }); }
   };
 
   const getRoleBadge = (role: string) => {
@@ -1131,6 +819,8 @@ function AnswerCard({
     }
     return null;
   };
+
+  if (answerGone) return <div className="py-3 text-sm italic text-muted-foreground">คำตอบนี้ถูกลบแล้ว</div>;
 
   // Instructor/TA can verify student answers (not their own, not already verified)
   const canVerify =
@@ -1233,7 +923,21 @@ function AnswerCard({
 
           {/* Answer Content */}
           <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap mb-4">
-            <CommentContent content={answer.content} compact={false} />
+            {editingAnswer ? (
+              <div>
+                <Textarea value={answerEdit} onChange={(e) => setAnswerEdit(e.target.value)} className="min-h-[100px] mb-2" aria-label="แก้ไขคำตอบ" />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={async () => {
+                    if (!answerEdit.trim()) return;
+                    try { await D.editRow("answers", answer.id, answerEdit); setAnswerContent(answerEdit); setEditingAnswer(false); toast.success("แก้ไขคำตอบแล้ว"); }
+                    catch (e) { toast.error("แก้ไขไม่สำเร็จ", { description: errMsg(e) }); }
+                  }}>บันทึก</Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setAnswerEdit(answerContent); setEditingAnswer(false); }}>ยกเลิก</Button>
+                </div>
+              </div>
+            ) : (
+              <CommentContent content={answerContent} compact={false} />
+            )}
           </div>
 
           {/* Author Info */}
@@ -1257,12 +961,20 @@ function AnswerCard({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" aria-label="คัดลอกลิงก์" onClick={() => { navigator.clipboard?.writeText(window.location.href); toast.success("คัดลอกลิงก์แล้ว"); }}>
                 <Share2 className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
+              {answer.isMine ? (
+                <>
+                  <Button variant="ghost" size="sm" aria-label="แก้ไขคำตอบ" onClick={() => { setAnswerEdit(answerContent); setEditingAnswer(true); }}><Pencil className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="sm" aria-label="ลบคำตอบ" className="text-destructive" onClick={async () => {
+                    try { await D.softDelete("answers", answer.id); setAnswerGone(true); toast.success("ลบคำตอบแล้ว"); }
+                    catch (e) { toast.error("ลบไม่สำเร็จ", { description: errMsg(e) }); }
+                  }}><Trash2 className="w-4 h-4" /></Button>
+                </>
+              ) : (
+                <ReportButton type="answer" id={answer.id} label />
+              )}
             </div>
           </div>
 
@@ -1280,7 +992,7 @@ function AnswerCard({
             {showComments && (
               <div className="space-y-3">
                 {sortedComments.slice(0, visibleComments).map((comment) => (
-                  <NestedReply key={comment.id} reply={comment} />
+                  <NestedReply key={comment.id} reply={comment} answerId={answer.id} />
                 ))}
 
                 {sortedComments.length > visibleComments && (
@@ -1406,32 +1118,40 @@ function AnswerCard({
 }
 
 // ============ MAIN PAGE COMPONENT ============
-export default function PostDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { currentRole } = useTestContext();
-  
-  const [dynamicQuestion, setDynamicQuestion] = useState<Question | undefined>(undefined);
+  const { session } = useAuth();
+  const [q, setQ] = useState<Question | null | undefined>(undefined);
+  const [err, setErr] = useState("");
+  const uid = session?.user.id;
 
-  // Load from localStorage only on client side to avoid hydration mismatch
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("dynamicQuestions") || "[]");
-    const raw = stored.find((q: any) => q.id === Number(id));
-    if (raw) {
-      setDynamicQuestion({
-        ...raw,
-        content: raw.description || raw.content || "",
-        votes: raw.votes || 0,
-        answers: raw.answers || [],
-        createdAt: raw.createdAt ? new Date(raw.createdAt).toISOString() : new Date().toISOString(),
-      });
-    }
-  }, [id]);
+    if (!uid) return;
+    let alive = true;
+    const n = Number(id);
+    if (!Number.isInteger(n)) { setQ(null); return; }
+    D.loadPost(n, uid)
+      .then((p) => { if (alive) { setQ(p as any); if (p) D.incrementView(n); } })
+      .catch((e) => alive && setErr(errMsg(e)));
+    return () => { alive = false; };
+  }, [id, uid]);
 
-  const question = dynamicQuestion || questionsData[id] || defaultQuestion;
+  if (err) return <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6 text-center"><p className="text-destructive">{err}</p><Button onClick={() => window.location.reload()}>ลองใหม่</Button></div>;
+  if (q === undefined) return <div className="min-h-screen flex items-center justify-center"><Spinner className="w-8 h-8" /></div>;
+  if (q === null) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6 text-center">
+      <h1 className="text-2xl font-bold">ไม่พบกระทู้นี้</h1>
+      <p className="text-muted-foreground">กระทู้อาจถูกลบหรือไม่มีอยู่จริง</p>
+      <Link href="/"><Button>กลับหน้าหลัก</Button></Link>
+    </div>
+  );
+  return <PostDetail key={id} initial={q} id={id} />;
+}
+
+function PostDetail({ initial, id }: { initial: Question; id: string }) {
+  const { currentRole } = useTestContext();
+  const { session, profile, isAdmin, viewAs } = useAuth();
+  const question = initial;
   const [newAnswer, setNewAnswer] = useState("");
   const [answerCodeBlocks, setAnswerCodeBlocks] = useState<CodeBlock[]>([]);
   const {
@@ -1447,35 +1167,27 @@ export default function PostDetailPage({
   const answerInputRef = useRef<HTMLTextAreaElement>(null);
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
 
-  // Joined sessions state (shared with main page via localStorage)
-  const [joinedSessions, setJoinedSessions] = useState<Set<number>>(new Set());
-
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("joinedSessions") || "[]");
-      setJoinedSessions(new Set(stored));
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    if (joinedSessions.size > 0 || localStorage.getItem("joinedSessions")) {
-      localStorage.setItem("joinedSessions", JSON.stringify([...joinedSessions]));
-    }
-  }, [joinedSessions]);
-
-  const handleJoinSession = (sessionId: number) => {
-    setJoinedSessions((prev) => {
-      const next = new Set(prev);
-      if (next.has(sessionId)) {
-        next.delete(sessionId);
-      } else {
-        next.add(sessionId);
-      }
-      return next;
-    });
+  const [isJoined, setIsJoined] = useState(!!question.joined);
+  const handleJoinSession = async (_sessionId: number) => {
+    const was = isJoined;
+    setIsJoined(!was);
+    try { await D.joinSession(question.id, !was); }
+    catch (e) { setIsJoined(was); toast.error(was ? "ยกเลิกไม่สำเร็จ" : "เข้าร่วมไม่สำเร็จ", { description: errMsg(e) }); }
   };
+  const [bookmarked, setBookmarked] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  useEffect(() => {
+    if (session) D.isBookmarked(session.user.id, question.id).then(setBookmarked).catch(() => {});
+  }, [session, question.id]);
+  const toggleBookmark = async () => {
+    const next = !bookmarked;
+    setBookmarked(next);
+    try { await D.setBookmark(session!.user.id, question.id, next); toast.success(next ? "บันทึกกระทู้แล้ว" : "ยกเลิกการบันทึกแล้ว"); }
+    catch (e) { setBookmarked(!next); toast.error(errMsg(e)); }
+  };
+  const copyLink = () => { navigator.clipboard?.writeText(window.location.href); toast.success("คัดลอกลิงก์แล้ว"); };
+  const canDeletePost = question.isMine || (isAdmin && viewAs === "admin");
 
-  const isJoined = joinedSessions.has(question.id);
 
   /* ---------- Study session derived values ---------- */
   const sessionMax = question.sessionMaxParticipants || 20;
@@ -1518,12 +1230,12 @@ export default function PostDetailPage({
     }
   };
 
-  const handleDeletePost = () => {
-    const stored = JSON.parse(localStorage.getItem("dynamicQuestions") || "[]");
-    const updated = stored.filter((q: any) => q.id !== Number(id));
-    localStorage.setItem("dynamicQuestions", JSON.stringify(updated));
-    toast.success("โพสต์ถูกลบแล้ว");
-    window.location.href = "/";
+  const handleDeletePost = async () => {
+    try {
+      await D.deleteQuestion(Number(id));
+      toast.success("โพสต์ถูกลบแล้ว");
+      window.location.href = "/";
+    } catch (e) { toast.error("ลบไม่สำเร็จ", { description: errMsg(e) }); }
   };
 
   const addAnswerCodeBlock = () => {
@@ -1554,64 +1266,32 @@ export default function PostDetailPage({
 
     setIsSubmittingAnswer(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
       const codeContent = answerCodeBlocks
         .map((b) => `\n\`\`\`${b.language.toLowerCase()}\n${b.code}\n\`\`\``)
         .join("");
-      const fullContent = newAnswer + codeContent;
-      const newId = Date.now();
-      const answer = {
-        id: newId,
-        content: fullContent,
-        author: {
-          name: "You",
-          initials: "YO",
-          year: "Year 2",
-          department: "Computer Science",
-          role: currentRole,
-        },
-        votes: 0,
-        isAccepted: false,
-        isVerified: false,
-        createdAt: "just now",
-        comments: [],
-      };
-      setAnswers((prev) => [answer, ...prev]);
+      const answer = await D.postAnswer(question.id, newAnswer + codeContent, session!.user.id);
+      setAnswers((prev) => [answer as any, ...prev]);
       setNewAnswer("");
       setAnswerCodeBlocks([]);
-      toast.success("Answer posted!", {
-        description: "Your solution has been shared with the community.",
-      });
+      toast.success("Answer posted!", { description: "Your solution has been shared with the community." });
     } catch (error) {
-      toast.error("Failed to post answer", {
-        description: "Please try again.",
-      });
+      toast.error("Failed to post answer", { description: errMsg(error) });
     } finally {
       setIsSubmittingAnswer(false);
     }
   };
 
-  const handleVerify = (answerId: number) => {
-    setAnswers((prev) =>
-      prev.map((a) =>
-        a.id === answerId
-          ? {
-              ...a,
-              isVerified: true,
-              verifiedBy:
-                currentRole === "instructor"
-                  ? "Dr. Somchai P."
-                  : "TA Somchai",
-            }
-          : a
-      )
-    );
+  const handleVerify = async (answerId: number) => {
+    try {
+      await D.verifyAnswer(answerId);
+      setAnswers((prev) => prev.map((a) => a.id === answerId ? { ...a, isVerified: true, verifiedBy: profile?.display_name ?? "TA" } : a));
+      toast.success("ยืนยันคำตอบแล้ว");
+    } catch (e) { toast.error("ยืนยันไม่สำเร็จ", { description: errMsg(e) }); }
   };
 
   /** The post author picks the answer that actually solved the problem. */
-  const handleAccept = (answerId: number) => {
+  const handleAccept = async (answerId: number) => {
+    try { await D.acceptAnswer(answerId); } catch (e) { toast.error("ทำรายการไม่สำเร็จ", { description: errMsg(e) }); return; }
     let nowAccepted = false;
     setAnswers((prev) =>
       prev.map((a) => {
@@ -1651,13 +1331,19 @@ export default function PostDetailPage({
             <h1 className="text-lg font-bold text-foreground">Question</h1>
             <p className="text-xs text-muted-foreground">{question.subject}</p>
           </div>
-          <Button variant="ghost" size="icon">
-            <Bookmark className="w-5 h-5" />
+          <Button variant="ghost" size="icon" aria-label="บันทึกกระทู้" onClick={toggleBookmark}>
+            <Bookmark className={cn("w-5 h-5", bookmarked && "fill-current text-primary")} />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label="คัดลอกลิงก์" onClick={copyLink}>
             <Share2 className="w-5 h-5" />
           </Button>
           {question.isMine && (
+            <Button variant="ghost" size="icon" aria-label="แก้ไขกระทู้" onClick={() => setEditOpen(true)}>
+              <Pencil className="w-5 h-5" />
+            </Button>
+          )}
+          {!question.isMine && <ReportButton type="question" id={question.id} label />}
+          {canDeletePost && (
             <Button
               variant="ghost"
               size="icon"
@@ -1670,6 +1356,7 @@ export default function PostDetailPage({
         </div>
       </header>
 
+      <EditQuestionDialog q={question} open={editOpen} onOpenChange={setEditOpen} />
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
@@ -1908,8 +1595,8 @@ export default function PostDetailPage({
                 onVote={() => voteQuestion(-1)}
                 active={votedDown}
               />
-              <Button variant="ghost" size="icon" className="mt-2" aria-label="บันทึกกระทู้">
-                <Bookmark className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="mt-2" aria-label="บันทึกกระทู้" onClick={toggleBookmark}>
+                <Bookmark className={cn("w-5 h-5", bookmarked && "fill-current text-primary")} />
               </Button>
             </div>
 
@@ -1975,6 +1662,7 @@ export default function PostDetailPage({
                             <FileText className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm text-foreground">{file.name}</span>
                             <span className="text-xs text-muted-foreground">({file.size})</span>
+                            {(file as any).url && <a href={(file as any).url} download={file.name} className="text-xs text-primary underline ml-1">ดาวน์โหลด</a>}
                           </div>
                         ))}
                     </div>

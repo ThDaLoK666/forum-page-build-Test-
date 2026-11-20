@@ -1,31 +1,31 @@
-"use client";
+"use client"; 
 
-import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { toast } from "sonner";
-import {
-  Search,
-  Plus,
-  User,
+import { useState, useRef, useEffect, useCallback } from "react"; 
+import Link from "next/link"; 
+import { toast } from "sonner"; 
+import { 
+  Search, 
+  Plus, 
+  User, 
   Home, 
-  CheckCircle2,
-  BookOpen,
-  Pin,
-  Download,
-  FileText,
-  Presentation,
-  Hash,
-  Trash2,
-  Clock,
-  MapPin,
-  UserPlus,
-  Calendar,
-  Link2,
-  Users,
-  Video,
-  Timer,
-  BookMarked,
-  ExternalLink,
+  CheckCircle2, 
+  BookOpen, 
+  Pin, 
+  Download, 
+  FileText, 
+  Presentation, 
+  Hash, 
+  Trash2, 
+  Clock, 
+  MapPin, 
+  UserPlus, 
+  Calendar, 
+  Link2, 
+  Users, 
+  Video, 
+  Timer, 
+  BookMarked, 
+  ExternalLink, 
   X,
   Menu,
   CalendarPlus,
@@ -52,6 +52,10 @@ import { highlightText } from "@/lib/highlight";
 import { useClientTime } from "@/lib/use-client-time";
 import { downloadIcs, googleCalendarUrl, sanitizeFilename } from "@/lib/calendar";
 import { QuestionCreator } from "@/components/forum/question-creator";
+import { UserMenu, ActivityBell } from "@/components/forum/user-menu";
+import { useAuth } from "@/lib/auth";
+import * as D from "@/lib/data";
+import { errMsg } from "@/lib/supabase";
 import { FilterTabs, type FilterType } from "@/components/forum/filter-tabs";
 import { NotificationBell, type SessionSummary } from "@/components/forum/notification-bell";
 
@@ -80,6 +84,7 @@ interface Question {
   videoUrl: string;
   isAnonymous: boolean;
   isMine: boolean;
+  joined?: boolean;
   // Study Session fields
   isStudySession?: boolean;
   sessionDate?: string;
@@ -99,7 +104,8 @@ interface Subject {
 }
 
 interface PinnedFile {
-  id: number;
+  id: string;
+  path?: string;
   name: string;
   type: "pdf" | "docx" | "pptx";
   subject: string;
@@ -125,310 +131,7 @@ interface FileUpload {
 const STUDY_SESSION_TAGS = ["#ติวก่อนสอบ", "#StudyGroup"];
 
 // ============ DATA ============
-const initialQuestions: Question[] = [
-  // --- Study Session Posts ---
-  {
-    id: 9001,
-    title: "📚 ITCS212 - ติวก่อนสอบ Data Structures: BST & Tree Traversal",
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "Data Structures", "BST", "Tree"],
-    description: "นัดติวข้อสอบ ITCS212 เนื้อหา Binary Search Tree, AVL Tree, และ Tree Traversal ทุกคนเตรียมโจทย์มาด้วยนะครับ จะมีสรุป cheat sheet ให้",
-    author: { name: "Siriporn K.", initials: "SK", year: "Year 2", department: "Computer Science" },
-    comments: 24,
-    subject: "ITCS212",
-    subjectColor: "#0891b2",
-    isSolved: false,
-    isVerified: false,
-    views: 187,
-    replies: 18,
-    createdAt: Date.now() - 3 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-    isStudySession: true,
-    sessionDate: "2026-08-08",
-    sessionTime: "14:00 - 17:00",
-    sessionLocation: "ห้อง 101 ตึก Computer Lab",
-    sessionLink: "https://meet.ict-mahidol.ac.th/bst-review",
-    sessionMaxParticipants: 20,
-    sessionCurrentParticipants: 14,
-    sessionMeetingType: "in-person",
-  },
-  {
-    id: 9002,
-    title: "📚 ICCS340 - ติว SQL JOIN & Normalization ก่อนสอบ midterm",
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "SQL", "Database", "JOIN"],
-    description: "รวมตัวติว SQL ตั้งแต่ INNER JOIN จนถึง 3NF/BCNF มีแบบฝึกหัดเตรียมมาให้ทำกัน ใครมีโจทย์ยากๆ เอามาแชร์ได้เลย!",
-    author: { name: "Thanawat P.", initials: "TP", year: "Year 3", department: "Computer Science" },
-    comments: 18,
-    subject: "ICCS340",
-    subjectColor: "#c026d3",
-    isSolved: false,
-    isVerified: false,
-    views: 142,
-    replies: 12,
-    createdAt: Date.now() - 5 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-    isStudySession: true,
-    sessionDate: "2026-08-07",
-    sessionTime: "13:00 - 15:30",
-    sessionLocation: "Zoom Meeting",
-    sessionLink: "https://zoom.us/j/1234567890",
-    sessionMaxParticipants: 30,
-    sessionCurrentParticipants: 22,
-    sessionMeetingType: "online",
-  },
-  {
-    id: 9003,
-    title: "📚 ITCS210 - ติว Java Exception Handling & OOP Concepts",
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "Java", "OOP", "Exception"],
-    description: "ติว Java สำหรับข้อสอบ midterm เนื้อหา try-catch, custom exceptions, และ OOP principles ที่จำเป็น ทุก level เข้าร่วมได้!",
-    author: { name: "Nattapong S.", initials: "NS", year: "Year 1", department: "Computer Science" },
-    comments: 15,
-    subject: "ITCS210",
-    subjectColor: "#7c3aed",
-    isSolved: false,
-    isVerified: false,
-    views: 128,
-    replies: 10,
-    createdAt: Date.now() - 8 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-    isStudySession: true,
-    sessionDate: "2026-08-06",
-    sessionTime: "18:00 - 20:00",
-    sessionLocation: "ห้อง 205 ตึก IT",
-    sessionLink: "",
-    sessionMaxParticipants: 15,
-    sessionCurrentParticipants: 9,
-    sessionMeetingType: "in-person",
-  },
-  {
-    id: 9004,
-    title: "📚 ITCS332 - ติว UML Diagram & System Design โค้งสุดท้าย",
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "UML", "System Design"],
-    description: "สรุปเนื้อหา UML ทั้ง Use Case, Class, Sequence, Activity Diagram พร้อมตัวอย่างโจทย์จริงจากข้อสอบปีก่อนๆ",
-    author: { name: "Pornpimol C.", initials: "PC", year: "Year 3", department: "Computer Science" },
-    comments: 21,
-    subject: "ITCS332",
-    subjectColor: "#dc2626",
-    isSolved: false,
-    isVerified: false,
-    views: 203,
-    replies: 15,
-    createdAt: Date.now() - 2 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-    isStudySession: true,
-    sessionDate: "2026-08-09",
-    sessionTime: "09:00 - 12:00",
-    sessionLocation: "Hall A, Building 3",
-    sessionLink: "",
-    sessionMaxParticipants: 25,
-    sessionCurrentParticipants: 19,
-    sessionMeetingType: "in-person",
-  },
-  {
-    id: 9005,
-    title: "📚 ITCS371 - ติว Agile & Scrum สำหรับข้อสอบ final",
-    tags: ["#ติวก่อนสอบ", "#StudyGroup", "Agile", "Scrum", "Project Management"],
-    description: "ติว Agile Methodology, Scrum Framework, Sprint Planning ทั้ง theory และ practice มี quiz ทดสอบความเข้าใจให้ด้วย",
-    author: { name: "Sarawut M.", initials: "SM", year: "Year 4", department: "Computer Science" },
-    comments: 12,
-    subject: "ITCS371",
-    subjectColor: "#7c3aed",
-    isSolved: false,
-    isVerified: false,
-    views: 95,
-    replies: 8,
-    createdAt: Date.now() - 6 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-    isStudySession: true,
-    sessionDate: "2026-08-10",
-    sessionTime: "14:00 - 16:00",
-    sessionLocation: "Online (Google Meet)",
-    sessionLink: "https://meet.google.com/abc-defg-hij",
-    sessionMaxParticipants: 40,
-    sessionCurrentParticipants: 28,
-    sessionMeetingType: "online",
-  },
-  // --- Regular Posts ---
-  {
-    id: 1,
-    title: "How to implement Binary Search Tree in Python?",
-    tags: ["#Lab1", "Python", "Data Structures", "BST"],
-    description: "I'm having trouble implementing a Binary Search Tree in Python.",
-    author: { name: "Siriporn K.", initials: "SK", year: "Year 2", department: "Computer Science" },
-    comments: 12,
-    subject: "ITCS212",
-    subjectColor: "#0891b2",
-    isSolved: true,
-    isVerified: true,
-    views: 234,
-    replies: 8,
-    createdAt: Date.now() - 2 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-  },
-  {
-    id: 2,
-    title: "What's the difference between SQL JOIN types?",
-    tags: ["#Assignment2", "SQL", "Database", "JOIN"],
-    description: "I need to understand the difference between INNER JOIN, LEFT JOIN, RIGHT JOIN, and FULL JOIN.",
-    author: { name: "Thanawat P.", initials: "TP", year: "Year 3", department: "Computer Science" },
-    comments: 8,
-    subject: "ICCS340",
-    subjectColor: "#c026d3",
-    isSolved: true,
-    isVerified: true,
-    views: 189,
-    replies: 5,
-    createdAt: Date.now() - 5 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-  },
-  {
-    id: 3,
-    title: "How to handle exceptions properly in Java?",
-    tags: ["#Lab3", "Java", "Exception Handling", "OOP"],
-    description: "I'm confused about when to use try-catch vs throws in Java.",
-    author: { name: "Nattapong S.", initials: "NS", year: "Year 1", department: "Computer Science" },
-    comments: 5,
-    subject: "ITCS210",
-    subjectColor: "#7c3aed",
-    isSolved: false,
-    isVerified: false,
-    views: 87,
-    replies: 3,
-    createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-  },
-  {
-    id: 4,
-    title: "Best practices for drawing UML diagrams?",
-    tags: ["#Assignment1", "UML", "System Design"],
-    description: "What are the best practices for creating UML diagrams for system analysis?",
-    author: { name: "Pornpimol C.", initials: "PC", year: "Year 3", department: "Computer Science" },
-    comments: 15,
-    subject: "ITCS332",
-    subjectColor: "#dc2626",
-    isSolved: true,
-    isVerified: true,
-    views: 312,
-    replies: 10,
-    createdAt: Date.now() - 3 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-  },
-  {
-    id: 5,
-    title: "Understanding recursion with factorial example",
-    tags: ["#Lab2", "Recursion", "Algorithms", "Python"],
-    description: "Can someone explain how recursion works with a factorial example?",
-    author: { name: "Kittipat W.", initials: "KW", year: "Year 2", department: "Computer Science" },
-    comments: 7,
-    subject: "ITCS212",
-    subjectColor: "#0891b2",
-    isSolved: true,
-    isVerified: false,
-    views: 156,
-    replies: 4,
-    createdAt: Date.now() - 6 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-  },
-  {
-    id: 6,
-    title: "How to normalize a database to 3NF?",
-    tags: ["#Assignment3", "Database", "Normalization", "3NF"],
-    description: "I need help understanding database normalization to Third Normal Form.",
-    author: { name: "Supakorn T.", initials: "ST", year: "Year 3", department: "Computer Science" },
-    comments: 10,
-    subject: "ICCS340",
-    subjectColor: "#c026d3",
-    isSolved: false,
-    isVerified: false,
-    views: 98,
-    replies: 6,
-    createdAt: Date.now() - 12 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-  },
-  {
-    id: 7,
-    title: "What is the Agile methodology in software development?",
-    tags: ["#Lab4", "Agile", "Scrum", "Project Management"],
-    description: "Can someone explain Agile methodology and how it differs from Waterfall?",
-    author: { name: "Sarawut M.", initials: "SM", year: "Year 4", department: "Computer Science" },
-    comments: 20,
-    subject: "ITCS371",
-    subjectColor: "#7c3aed",
-    isSolved: true,
-    isVerified: true,
-    views: 402,
-    replies: 12,
-    createdAt: Date.now() - 4 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-  },
-  {
-    id: 8,
-    title: "Difference between stack and queue data structures?",
-    tags: ["#Lab1", "Stack", "Queue", "Data Structures"],
-    description: "When should I use a stack vs a queue in my programs?",
-    author: { name: "Apinya L.", initials: "AL", year: "Year 2", department: "Computer Science" },
-    comments: 6,
-    subject: "ITCS212",
-    subjectColor: "#0891b2",
-    isSolved: true,
-    isVerified: true,
-    views: 145,
-    replies: 4,
-    createdAt: Date.now() - 8 * 60 * 60 * 1000,
-    isAnonymous: false,
-    isMine: false,
-    codeBlocks: [],
-    files: [],
-    videoUrl: "",
-  },
-];
+const initialQuestions: Question[] = [];
 
 const subjects: Subject[] = [
   { code: "ITCS210", name: "Fundamental Programming Concepts", color: "#7c3aed", shortCode: "ITCS" },
@@ -438,14 +141,7 @@ const subjects: Subject[] = [
   { code: "ITCS371", name: "Introduction to Software Engineering", color: "#7c3aed", shortCode: "ITCS" },
 ];
 
-const pinnedFiles: PinnedFile[] = [
-  { id: 1, name: "ITCS212 - BST Lecture Notes.pdf", type: "pdf", subject: "ITCS212", size: "2.4 MB", tags: ["Data Structures", "BST", "Python"] },
-  { id: 2, name: "ITCS212 - Lab Assignment 1.pdf", type: "pdf", subject: "ITCS212", size: "1.1 MB", tags: ["#Lab1", "Data Structures"] },
-  { id: 3, name: "ICCS340 - SQL JOIN Cheatsheet.docx", type: "docx", subject: "ICCS340", size: "890 KB", tags: ["SQL", "Database"] },
-  { id: 4, name: "ITCS332 - UML Diagram Guide.pptx", type: "pptx", subject: "ITCS332", size: "5.6 MB", tags: ["UML", "System Design"] },
-  { id: 5, name: "ITCS371 - Agile Methodology Slides.pptx", type: "pptx", subject: "ITCS371", size: "3.2 MB", tags: ["Agile", "Scrum", "Project Management"] },
-  { id: 6, name: "ITCS210 - Java Exception Handling.pdf", type: "pdf", subject: "ITCS210", size: "1.8 MB", tags: ["Java", "Exception Handling"] },
-];
+const pinnedFiles: PinnedFile[] = [];
 
 const tagClouds = [
   "#Lab1", "#Lab2", "#Lab3", "#Lab4",
@@ -697,9 +393,8 @@ function Header({
             <span className="hidden sm:inline">[+ New Post]</span>
           </Button>
           <NotificationBell sessions={sessions} joinedIds={joinedIds} />
-          <Button variant="ghost" size="icon" aria-label="โปรไฟล์ผู้ใช้">
-            <User className="w-5 h-5" />
-          </Button>
+          <ActivityBell />
+          <UserMenu />
         </div>
       </div>
     </header>
@@ -1312,9 +1007,23 @@ function DownloadModal({ file, onClose }: { file: PinnedFile; onClose: () => voi
   const [status, setStatus] = useState<"downloading" | "success">("downloading");
   useEffect(() => {
     const timer = setTimeout(() => {
-      triggerFileDownload(file);
-      setStatus("success");
-      toast.success("ดาวน์โหลดสำเร็จ", { description: file.name });
+      (async () => {
+        try {
+          if (file.path && !file.path.startsWith("demo/")) {
+            const url = await D.signedUrl(file.path, sanitizeFilename(file.name));
+            const a = document.createElement("a");
+            a.href = url; a.download = sanitizeFilename(file.name);
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          } else {
+            triggerFileDownload(file);
+          }
+          setStatus("success");
+          toast.success("ดาวน์โหลดสำเร็จ", { description: file.name });
+        } catch (e) {
+          toast.error("ดาวน์โหลดไม่สำเร็จ", { description: errMsg(e) });
+          onClose();
+        }
+      })();
     }, 1200);
     return () => clearTimeout(timer);
   }, [file]);
@@ -1360,19 +1069,11 @@ export default function ForumPage() {
   const [downloadingFile, setDownloadingFile] = useState<PinnedFile | null>(null);
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [joinedSessions, setJoinedSessions] = useState<Set<number>>(new Set());
+  const joinedSessions = new Set(questions.filter((q) => q.joined).map((q) => q.id));
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Panic Period Filter — narrows study sessions down to a date window
   const [sessionWindow, setSessionWindow] = useState<"all" | "week" | "today" | "date">("all");
   const [sessionDate, setSessionDate] = useState<string>("");
-
-  // Load joined sessions from localStorage
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("joinedSessions") || "[]");
-      setJoinedSessions(new Set(stored));
-    } catch {}
-  }, []);
 
   // Support deep links from post pages: /?tag=%23Lab1 and /?q=keyword
   useEffect(() => {
@@ -1385,36 +1086,21 @@ export default function ForumPage() {
     if (filter === "study-session") setActiveFilter("study-session");
   }, []);
 
-  // Save joined sessions to localStorage when changed
-  useEffect(() => {
-    if (joinedSessions.size > 0 || localStorage.getItem("joinedSessions")) {
-      localStorage.setItem("joinedSessions", JSON.stringify([...joinedSessions]));
-    }
-  }, [joinedSessions]);
-
-  // Load dynamic questions from localStorage
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("dynamicQuestions") || "[]");
-      const validStored = stored.filter((q: any) => q.id > 1000000000000);
-      if (validStored.length !== stored.length) {
-        localStorage.setItem("dynamicQuestions", JSON.stringify(validStored));
-      }
-      if (validStored.length > 0) {
-        setQuestions((prev) => {
-          const seen = new Set(prev.map((q) => q.id));
-          const merged = [...prev];
-          for (const q of validStored) {
-            if (!seen.has(q.id)) {
-              seen.add(q.id);
-              merged.push(q);
-            }
-          }
-          return merged;
-        });
-      }
-    } catch {}
+  const { session } = useAuth();
+  const [loadingFeed, setLoadingFeed] = useState(true);
+  const uid = session?.user.id;
+  const refreshData = useCallback(async () => {
+    const [qs, files] = await Promise.all([D.loadFeed(), D.loadPinnedFiles()]);
+    setQuestions(qs as any);
+    setDynamicPinnedFiles(files as any);
   }, []);
+  useEffect(() => {
+    if (!uid) return;
+    let alive = true;
+    refreshData().catch((e) => alive && toast.error("โหลดข้อมูลไม่สำเร็จ", { description: errMsg(e) })).finally(() => alive && setLoadingFeed(false));
+    const t = setInterval(() => { if (document.visibilityState === "visible") refreshData().catch(() => {}); }, 60000);
+    return () => { alive = false; clearInterval(t); };
+  }, [uid, refreshData]);
 
   const isStudySessionFilter = activeFilter === "study-session";
 
@@ -1422,46 +1108,42 @@ export default function ForumPage() {
     setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
   };
 
-  const handlePostCreated = (question: Question): number => {
-    const newId = Date.now();
-    const newQuestion = { ...question, id: newId };
-    setQuestions((prev) => [newQuestion, ...prev]);
-    const stored = JSON.parse(localStorage.getItem("dynamicQuestions") || "[]");
-    stored.push(newQuestion);
-    localStorage.setItem("dynamicQuestions", JSON.stringify(stored));
-    const newFiles: PinnedFile[] = question.files.map((f, idx) => ({
-      id: Date.now() + idx,
-      name: f.name,
-      type: f.type.includes("pdf") ? "pdf" : f.type.includes("docx") ? "docx" : "pptx",
-      subject: question.subject,
-      size: f.size,
-      tags: question.tags,
-    }));
-    setDynamicPinnedFiles((prev) => [...newFiles, ...prev]);
-    return newId;
+  const handlePostCreated = async (q: Question): Promise<number> => {
+    const uploaded = await D.uploadFiles(session!.user.id, q.files as any);
+    const id = await D.createQuestion({
+      subject: q.subject, title: q.title, body: q.description, tags: q.tags, isAnonymous: q.isAnonymous,
+      videoUrl: q.videoUrl, codeBlocks: q.codeBlocks, files: uploaded,
+      session: q.isStudySession
+        ? { date: q.sessionDate, time: q.sessionTime, location: q.sessionLocation, link: q.sessionLink, max: q.sessionMaxParticipants, type: q.sessionMeetingType }
+        : null,
+    });
+    refreshData().catch(() => {});
+    return id;
   };
 
   const allPinnedFiles = [...dynamicPinnedFiles, ...pinnedFiles];
 
-  const handleDeleteQuestion = (questionId: number) => {
-    const stored = JSON.parse(localStorage.getItem("dynamicQuestions") || "[]");
-    const updated = stored.filter((q: any) => q.id !== questionId);
-    localStorage.setItem("dynamicQuestions", JSON.stringify(updated));
-    setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+  const handleDeleteQuestion = async (questionId: number) => {
+    try {
+      await D.deleteQuestion(questionId);
+      setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+      toast.success("โพสต์ถูกลบแล้ว");
+    } catch (e) {
+      toast.error("ลบไม่สำเร็จ", { description: errMsg(e) });
+    }
     setDeletingId(null);
-    toast.success("โพสต์ถูกลบแล้ว");
   };
 
-  const handleJoinSession = (sessionId: number) => {
-    setJoinedSessions((prev) => {
-      const next = new Set(prev);
-      if (next.has(sessionId)) {
-        next.delete(sessionId);
-      } else {
-        next.add(sessionId);
-      }
-      return next;
-    });
+  const handleJoinSession = async (sessionId: number) => {
+    const was = joinedSessions.has(sessionId);
+    const setJ = (v: boolean) => setQuestions((prev) => prev.map((q) => (q.id === sessionId ? { ...q, joined: v } : q)));
+    setJ(!was);
+    try {
+      await D.joinSession(sessionId, !was);
+    } catch (e) {
+      setJ(was);
+      toast.error(was ? "ยกเลิกไม่สำเร็จ" : "เข้าร่วมไม่สำเร็จ", { description: errMsg(e) });
+    }
   };
 
   const filteredPinnedFiles = allPinnedFiles.filter((f) => {
@@ -1545,12 +1227,14 @@ export default function ForumPage() {
     }));
 
   const isSearching = searchQuery.trim().length > 0;
-  const hasActiveFilters = isSearching || selectedTags.length > 0 || !!selectedSubject;
+  const hasActiveFilters = isSearching || selectedTags.length > 0 || !!selectedSubject || sessionWindow !== "all";
 
   const clearAllFilters = () => {
     setSearchQuery("");
     setSelectedTags([]);
     setSelectedSubject(null);
+    setSessionWindow("all");
+    setSessionDate("");
   };
 
   return (
@@ -1558,6 +1242,7 @@ export default function ForumPage() {
       "min-h-screen bg-background transition-colors duration-500",
       isStudySessionFilter && "bg-gradient-to-b from-teal-50/80 via-background to-background dark:from-teal-950/20"
     )}>
+      {loadingFeed && <div className="text-center text-sm text-muted-foreground py-1 bg-muted">กำลังโหลดข้อมูล...</div>}
       <Header
         onCreatePost={() => setIsModalOpen(true)}
         searchQuery={searchQuery}
@@ -1623,6 +1308,8 @@ export default function ForumPage() {
                   setSelectedSubject(null);
                   setSelectedTags([]);
                   setSearchQuery("");
+                  setSessionWindow("all");
+                  setSessionDate("");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 className="flex items-center gap-3 group flex-shrink-0"
