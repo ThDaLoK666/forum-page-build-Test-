@@ -8,7 +8,7 @@ import { ArrowLeft, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
-import { errMsg } from "@/lib/supabase";
+import { errMsg, supabase } from "@/lib/supabase";
 import * as D from "@/lib/data";
 
 type Tab = "reports" | "users" | "identity";
@@ -21,6 +21,7 @@ export default function AdminPage() {
   const [reports, setReports] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [log, setLog] = useState<any[]>([]);
+  const [anon, setAnon] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [qid, setQid] = useState("");
   const [reason, setReason] = useState("");
@@ -31,6 +32,8 @@ export default function AdminPage() {
     try {
       const [s, r, u, l] = await Promise.all([D.adminStats(), D.adminReports(), D.listUsers(), D.identityLog()]);
       setStats(s); setReports(r); setUsers(u); setLog(l);
+      const { data } = await supabase.from("question_feed").select("id,title,created_at").eq("is_anonymous", true).order("id", { ascending: false }).limit(50);
+      setAnon(data ?? []);
     } catch (e) { toast.error(errMsg(e)); }
   }, []);
 
@@ -126,6 +129,15 @@ export default function AdminPage() {
                 <Input className="w-32" placeholder="เลขกระทู้" value={qid} onChange={(e) => setQid(e.target.value)} />
                 <Input className="flex-1 min-w-[12rem]" placeholder="เหตุผล เช่น ละเมิดกฎข้อ 1 ตามรายงาน #12" value={reason} onChange={(e) => setReason(e.target.value)} />
                 <Button onClick={reveal}>เปิดดู</Button>
+              </div>
+              <div className="border border-border rounded-md divide-y divide-border max-h-56 overflow-y-auto">
+                <div className="p-2 text-xs text-muted-foreground">กระทู้นิรนามทั้งหมด (กดเลือกเพื่อเติมเลขกระทู้)</div>
+                {anon.length === 0 && <div className="p-2 text-sm text-muted-foreground">ยังไม่มีกระทู้นิรนาม</div>}
+                {anon.map((a) => (
+                  <button key={a.id} type="button" onClick={() => { setQid(String(a.id)); setRevealed(null); }} className={`w-full text-left p-2 text-sm hover:bg-muted ${String(a.id) === qid ? "bg-primary/10" : ""}`}>
+                    <span className="text-muted-foreground">#{a.id}</span> {a.title}
+                  </button>
+                ))}
               </div>
               {revealed && <div className="text-sm bg-muted rounded-md p-3">ชื่อ: <b>{revealed.display_name}</b> · อีเมล: <b>{revealed.email}</b></div>}
             </div>

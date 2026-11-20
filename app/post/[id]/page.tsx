@@ -830,10 +830,10 @@ function AnswerCard({
 
   return (
     <div className={cn(
-      "border-l-4 pl-6 py-4",
+      "border-l-4 pl-3 sm:pl-6 py-4",
       answer.isAccepted ? "border-emerald-500" : answer.isVerified ? "border-cyan-500" : "border-transparent"
     )}>
-      <div className="flex gap-4">
+      <div className="flex gap-2 sm:gap-4">
         {/* Vote Section - On EVERY Answer Box */}
         <div className="flex flex-col items-center gap-2">
           <VoteButton
@@ -860,7 +860,7 @@ function AnswerCard({
         </div>
 
         {/* Content Section */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Top row: badges + owner/instructor actions */}
           <div className="flex items-start justify-between gap-2 mb-3 flex-wrap">
             <div className="flex items-center gap-2 flex-wrap">

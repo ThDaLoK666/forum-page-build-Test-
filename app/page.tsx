@@ -233,13 +233,13 @@ function Header({
           >
             <Menu className="w-5 h-5" />
           </button>
-          <img src="/images/ict-logo.png" alt="ICT Mahidol University" className="h-10 w-auto object-contain" />
+          <img src="/images/ict-logo.png" alt="ICT Mahidol University" className="hidden sm:block h-10 w-auto object-contain" />
           <div className="hidden sm:block">
             <h1 className="text-lg font-bold text-foreground">ICT Forum</h1>
             <p className="text-xs text-muted-foreground">Mahidol University</p>
           </div>
         </div>
-        <div className="flex-1 max-w-2xl mx-4" ref={searchWrapRef}>
+        <div className="flex-1 min-w-0 max-w-2xl mx-2 sm:mx-4" ref={searchWrapRef}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -1301,7 +1301,7 @@ export default function ForumPage() {
           </div>
           <div className="flex-1 min-w-0">
             {/* Header Row */}
-            <div className="flex items-center gap-4 mb-6 flex-wrap">
+            <div className="flex items-center gap-x-4 gap-y-3 mb-6 flex-wrap">
               <button
                 onClick={() => {
                   setActiveFilter("all");
@@ -1317,9 +1317,9 @@ export default function ForumPage() {
                 <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-secondary group-hover:bg-primary/10 transition-colors">
                   <Home className="w-5 h-5 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors">Home Feed</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">Home Feed</h2>
               </button>
-              <div className="flex-1 flex justify-end min-w-0">
+              <div className="basis-full sm:basis-0 flex-1 flex justify-end min-w-0">
                 <FilterTabs activeFilter={activeFilter} onFilterChange={setActiveFilter} />
               </div>
             </div>
