@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -28,42 +28,13 @@ export interface SessionSummary {
   description?: string;
 }
 
-interface NotificationBellProps {
+interface SessionsProps {
   sessions: SessionSummary[];
   joinedIds: Set<number>;
 }
 
-/**
- * Bell in the header. Lists the study sessions the user has joined,
- * sorted by how soon they start, with reminders for anything within 24h.
- */
-export function NotificationBell({ sessions, joinedIds }: NotificationBellProps) {
-  const [open, setOpen] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
-  // null until mounted — keeps SSR and client markup identical, then ticks
+export function useSessionReminders({ sessions, joinedIds }: SessionsProps) {
   const now = useClientTime();
-
-  // Close on outside click / Escape
-  useEffect(() => {
-    if (!open) return;
-
-    const handleClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-
-    document.addEventListener("mousedown", handleClick);
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, [open]);
-
   const joinedSessions = useMemo(() => {
     if (now === null) return [];
     return sessions
@@ -96,43 +67,23 @@ export function NotificationBell({ sessions, joinedIds }: NotificationBellProps)
       toast.error("บันทึกไม่สำเร็จ", { description: "กระทู้นี้ยังไม่ได้ระบุวันที่นัดติว" });
     }
   };
+  return { upcoming, urgentCount, badgeCount, handleSaveCalendar };
+}
 
+/** My Sessions tab content: joined study sessions sorted by start time. */
+export function SessionsPanel({
+  upcoming,
+  handleSaveCalendar,
+  onNavigate,
+}: {
+  upcoming: ReturnType<typeof useSessionReminders>["upcoming"];
+  handleSaveCalendar: (s: SessionSummary) => void;
+  onNavigate: () => void;
+}) {
+  const setOpen = (_: boolean) => onNavigate();
   return (
-    <div className="relative" ref={panelRef}>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative"
-        onClick={() => setOpen((o) => !o)}
-        aria-label={`การแจ้งเตือน (${badgeCount} รายการ)`}
-        aria-expanded={open}
-      >
-        <Bell className={cn("w-5 h-5", urgentCount > 0 && "animate-pulse")} />
-        {badgeCount > 0 && (
-          <span
-            className={cn(
-              "absolute top-1 right-1 w-4 h-4 text-white text-[10px] font-bold rounded-full flex items-center justify-center",
-              urgentCount > 0 ? "bg-red-500" : "bg-teal-500"
-            )}
-          >
-            {badgeCount > 9 ? "9+" : badgeCount}
-          </span>
-        )}
-      </Button>
-
-      {open && (
-        <div className="absolute right-0 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/40">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-teal-600" />
-              <span className="text-sm font-bold text-foreground">My Sessions</span>
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {upcoming.length} นัดที่กำลังจะถึง
-            </span>
-          </div>
-
-          <div className="max-h-[26rem] overflow-y-auto">
+    <>
+          <div className="max-h-[22rem] overflow-y-auto">
             {upcoming.length === 0 ? (
               <div className="px-4 py-10 text-center">
                 <Bell className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
@@ -230,8 +181,6 @@ export function NotificationBell({ sessions, joinedIds }: NotificationBellProps)
               ระบบจะเตือนอัตโนมัติเมื่อเหลือเวลาน้อยกว่า 24 ชั่วโมง
             </div>
           )}
-        </div>
-      )}
-    </div>
+    </>
   );
 }

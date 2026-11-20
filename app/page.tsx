@@ -57,7 +57,7 @@ import { useAuth } from "@/lib/auth";
 import * as D from "@/lib/data";
 import { errMsg } from "@/lib/supabase";
 import { FilterTabs, type FilterType } from "@/components/forum/filter-tabs";
-import { NotificationBell, type SessionSummary } from "@/components/forum/notification-bell";
+import { type SessionSummary } from "@/components/forum/notification-bell";
 
 // ============ TYPES ============
 interface Question {
@@ -393,8 +393,7 @@ function Header({
             <span className="hidden sm:inline">[+ New Post]</span>
           </Button>
           <Link href="/library" className="hidden md:block"><Button variant="ghost" size="sm">คลังความรู้</Button></Link>
-          <NotificationBell sessions={sessions} joinedIds={joinedIds} />
-          <ActivityBell />
+          <ActivityBell sessions={sessions} joinedIds={joinedIds} />
           <UserMenu />
         </div>
       </div>
