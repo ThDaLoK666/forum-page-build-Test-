@@ -1,6 +1,7 @@
 # แผนสร้างเว็บจริง (ITDS492): ICT Learning Support Forum
 
-สถานะ: แผน รอข้อมูลจากผู้ใช้ ยังไม่ได้แก้โค้ด
+สถานะ: ทำแล้ว (20 พ.ย. 2569) Supabase โปรเจกต์ `fjjzasqdmquryauxcgnp` (ICT Learning Support Forum, ap-southeast-1) รัน migration core_schema, study_sessions_and_fixes, accept_toggle แล้ว `schema_draft.sql` เป็นเอกสารเก่า ใช้ฐานข้อมูลจริงเป็นหลัก
+ยังต้องทำเอง: ตั้งค่า Auth ใน Supabase Dashboard (Site URL, SMTP/ปิดยืนยันอีเมล), push โค้ดขึ้น GitHub
 
 ## การตัดสินใจที่ยืนยันแล้ว
 | เรื่อง | ตัดสินใจ |
