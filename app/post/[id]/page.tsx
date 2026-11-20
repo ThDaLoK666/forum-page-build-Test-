@@ -1899,7 +1899,7 @@ function PostDetail({ initial, id }: { initial: Question; id: string }) {
                 <h3 className="text-sm font-bold text-foreground">Recommended for you</h3>
               </div>
               <p className="text-xs text-muted-foreground mb-4">
-                Related content based on this question&apos;s topics
+                ตัวอย่างข้อมูล (Demo) — ระบบแนะนำเนื้อหาจริงเป็น Future Work
               </p>
               <div className="space-y-3">
                 {(recommendations[question.tags[0]] || recommendations["default"]).map((rec, i) => (
