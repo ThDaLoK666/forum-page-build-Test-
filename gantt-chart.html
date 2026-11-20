@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Gantt Chart - ICT Community Forum</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #ffffff; color: #1a1a19; }
+  .wrapper { width: 100%; margin: 0; padding: 28px 36px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  .subtitle { font-size: 16px; color: #6b6b66; margin: 0 0 20px; }
+  .legend { display: flex; gap: 26px; flex-wrap: wrap; margin: 0 0 18px; font-size: 15px; color: #555550; }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+  .swatch.diamond { width: 11px; height: 11px; border-radius: 2px; background: #1D9E75; transform: rotate(45deg); }
+  .scroll-area { overflow-x: auto; border: 1px solid #e5e5e0; border-radius: 10px; }
+  .grid-row { display: flex; }
+  .info-header, .info-cell { flex-shrink: 0; width: 420px; position: sticky; left: 0; z-index: 2; background: #fff; display: flex; align-items: center; padding: 0 12px 0 20px; font-size: 14px; }
+  .info-header { z-index: 4; padding: 0 12px; color: #8a8a85; border-bottom: 1px solid #e5e5e0; font-weight: 600; align-items: flex-end; padding-bottom: 4px; }
+  .info-cell.header-row { background: #fafaf8; font-weight: 600; padding-left: 12px; font-size: 15px; }
+  .info-cell:not(.header-row) { border-bottom: 1px solid #f0f0ec; gap: 10px; }
+  .info-label { flex: 1; color: #1a1a19; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .info-meta { width: 56px; text-align: right; color: #8a8a85; flex-shrink: 0; }
+  .ruler { position: relative; border-bottom: 1px solid #e5e5e0; }
+  .ruler-week { position: absolute; top: 0; height: 24px; font-size: 12px; font-weight: 600; color: #4a4a45; border-left: 1px solid #d8d8d2; padding-left: 5px; display: flex; align-items: center; }
+  .ruler-daynum { position: absolute; top: 24px; height: 19px; font-size: 10.5px; color: #6b6b66; border-left: 1px solid #eef0ec; display: flex; align-items: center; justify-content: center; }
+  .ruler-dayletter { position: absolute; top: 43px; height: 16px; font-size: 9.5px; color: #a8a8a2; border-left: 1px solid #eef0ec; display: flex; align-items: center; justify-content: center; }
+  .timeline { position: relative; }
+  .timeline.header-row { background: #fafaf8; }
+  .timeline:not(.header-row) { border-bottom: 1px solid #f0f0ec; }
+  .today-line { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed #d6785a; z-index: 1; }
+  .task-bar { position: absolute; border: 1px solid #B4B2A9; border-radius: 6px; background: #E1DFD6; overflow: hidden; height: 22px; }
+  .task-fill { height: 100%; }
+  .milestone { position: absolute; width: 17px; height: 17px; background: #1D9E75; transform: rotate(45deg); border-radius: 3px; }
+  .footnote { font-size: 13px; color: #8a8a85; margin: 16px 0 0; line-height: 1.6; }
+  .sticky-top { position: sticky; top: 0; z-index: 3; background: #fff; }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <h1>Gantt Chart โครงการ ICT Community Forum</h1>
+  <p class="subtitle">ภาพรวมทั้งโครงการ (ITDS491 + ITDS492) — พฤษภาคม ถึง พฤศจิกายน 2569</p>
+  <h2 class="sr-only">
+    Gantt chart รายละเอียดโครงการ ICT Community Forum ตั้งแต่พฤษภาคมถึงพฤศจิกายน 2569
+    แบ่งตามเฟส งานย่อย และความคืบหน้า แสดงกริดรายวัน
+  </h2>
+
+  <div class="legend">
+    <span class="legend-item"><span class="swatch" style="background:#1D9E75"></span>เสร็จแล้ว</span>
+    <span class="legend-item"><span class="swatch" style="background:#BA7517"></span>กำลังทำ</span>
+    <span class="legend-item"><span class="swatch" style="background:#E1DFD6;border:1px solid #B4B2A9"></span>ยังไม่เริ่ม</span>
+    <span class="legend-item"><span class="swatch diamond"></span>วันทดสอบ (milestone)</span>
+  </div>
+
+  <div class="scroll-area">
+    <div id="grid"></div>
+  </div>
+
+  <p class="footnote">
+    * ช่วงออกแบบ/เริ่มพัฒนา และแผน ITDS492 เป็นการประมาณ (ไม่มีวันที่แน่นอนในเอกสารต้นฉบับ)
+    ส่วนวันทดสอบ P0–P3, วัน commit และวันสอบ Proposal (2 ต.ค. 2569 — ยืนยันแล้ว) เป็นวันที่จริง &middot; เส้นประ = วันนี้ (23 ก.ย. 2569)<br>
+    ที่มาข้อมูล: ITDS491 Senior Project Proposal (วันที่ทดสอบ P0–P3, commit 1dd2602) และ System Decomposition Diagram (Lucid) เทียบกับโค้ดจริงใน forum-page-build repo &middot;
+    % ความคืบหน้าของ S1–S4 คำนวณจากสัดส่วนฟีเจอร์ย่อย (เขียว=เสร็จ) ต่อฟีเจอร์ย่อยทั้งหมดในแต่ละหมวดของ Decomposition Diagram &middot; ชี้เมาส์ที่ชื่องาน S1–S4 เพื่อดูรายการที่ยังไม่เสร็จ
+  </p>
+</div>
+
+<script>
+(function () {
+  var START = new Date("2026-05-10");
+  var END = new Date("2026-11-10");
+  var TODAY = new Date("2026-09-23");
+
+  var ROWS = [
+    { type: "header", label: "การวิจัยและออกแบบ" },
+    { type: "task", label: "เก็บความต้องการ (Survey + คู่แข่ง)", start: "2026-05-10", end: "2026-06-05", progress: 100 },
+    { type: "task", label: "ออกแบบ UI/UX (Wireframe + v0)", start: "2026-06-06", end: "2026-07-15", progress: 100, estimated: true },
+    { type: "header", label: "พัฒนาระบบ" },
+    { type: "task", label: "S1 จัดการผู้ใช้ (Login/Profile/Anonymous)", start: "2026-06-15", end: "2026-10-31", progress: 60, estimated: true, detail: "ทำ 15 มิ.ย.–7 ส.ค. (prototype) แล้วพัก แล้วทำต่อ 3–31 ต.ค. (Supabase Auth + Profile CRUD) หลังสอบ Proposal 2 ต.ค. — ตอนนี้ 60% (6/10 ฟีเจอร์ย่อย) เสร็จ: Anonymous system ครบ, Read Profile · ค้างอยู่: Real Auth, Create/Update/Delete Profile → เป้าเสร็จ 100% ภายใน 31 ต.ค. 2569" },
+    { type: "task", label: "S2 จัดการเนื้อหา (Post/Vote/Organize)", start: "2026-06-15", end: "2026-10-19", progress: 88, estimated: true, detail: "ทำ 15 มิ.ย.–7 ส.ค. (prototype) แล้วพัก แล้วทำต่อ 5–19 ต.ค. (เติม CRUD ที่เหลือ) หลังสอบ Proposal 2 ต.ค. — ตอนนี้ 88% (21/24 ฟีเจอร์ย่อย) เสร็จ: โพสต์/โหวต/แนบไฟล์/จัดหมวดหมู่/accept answer ครบ · ค้างอยู่: แก้ไขกระทู้, แก้ไข/ลบคำตอบ → เป้าเสร็จ 100% ภายใน 19 ต.ค. 2569" },
+    { type: "task", label: "S3 สนับสนุนการเรียนรู้ (Search/Session/Tools)", start: "2026-06-15", end: "2026-08-07", progress: 100, estimated: true, detail: "ทำ 15 มิ.ย.–7 ส.ค. 2569 — เสร็จ 100% (12/12 ฟีเจอร์ย่อย) ค้นหา, นัดติว (Study Session), เครื่องมือเรียนรู้ (Code Viewer, Pinned Repo) เสร็จครบ ไม่มีงานค้าง" },
+    { type: "task", label: "S4 จัดการระบบ/บังคับใช้กฎ (Data/Notification/Admin)", start: "2026-06-15", end: "2026-11-09", progress: 53, estimated: true, detail: "ทำ 15 มิ.ย.–7 ส.ค. (prototype) แล้วพัก แล้วทำต่อ 3 ต.ค.–9 พ.ย. (Admin Dashboard + เติม CRUD + ระบบกำกับดูแล) หลังสอบ Proposal 2 ต.ค. — ตอนนี้ 53% (9/17 ฟีเจอร์ย่อย) เสร็จ: CRUD บน localStorage บางส่วน, Notification bell พื้นฐาน, ตรวจจับข้อมูลส่วนตัว · ค้างอยู่: Admin Dashboard, Misconduct Scan, Guideline Docs, Report button, Moderation Queue, แจ้งเตือนตอบกลับ → เป้าเสร็จ 100% ภายใน 9 พ.ย. 2569" },
+    { type: "header", label: "ทดสอบและปรับปรุง" },
+    { type: "milestone", label: "P0 Pilot Test", date: "2026-08-01" },
+    { type: "milestone", label: "P1 Usability Test", date: "2026-08-22" },
+    { type: "task", label: "แก้ไข UX ตามผลทดสอบ", start: "2026-08-23", end: "2026-08-28", progress: 100 },
+    { type: "milestone", label: "P2/P3 Pilot Test เสริม", date: "2026-09-02" },
+    { type: "header", label: "สรุปผลและนำเสนอ" },
+    { type: "task", label: "เขียน Proposal + ตรวจสไลด์/Diagram", start: "2026-09-01", end: "2026-09-25", progress: 75 },
+    { type: "milestone", label: "สอบ Proposal", date: "2026-10-02" },
+    { type: "header", label: "ITDS492 (แผนอนาคต – ยังไม่เริ่ม)" },
+    { type: "task", label: "เชื่อม Supabase (Auth, RLS)", start: "2026-10-03", end: "2026-10-24", progress: 0, estimated: true, detail: "S1.1.2 Real Auth และฟีเจอร์สีเทาที่ต้องมีฐานข้อมูลจริง — เริ่มหลังสอบ Proposal (2 ต.ค.) → ทำให้ S1 เสร็จ 100%" },
+    { type: "task", label: "Profile CRUD + Admin Dashboard", start: "2026-10-03", end: "2026-10-31", progress: 0, estimated: true, detail: "S1.2 Update/Delete Profile · S4.3 Admin Dashboard → ทำให้ S1, S4 เสร็จ 100%" },
+    { type: "task", label: "เติม CRUD ที่เหลือ + แจ้งเตือนตอบกลับ", start: "2026-10-05", end: "2026-10-19", progress: 0, estimated: true, detail: "S2.1.3 Update กระทู้ · S2.2.3/2.2.4 Update/Delete คำตอบ · S4.2.4 แจ้งเตือนเมื่อมีคนตอบ → ทำให้ S2 เสร็จ 100% (ระบุเพิ่มหลังตรวจ Decomposition Diagram ล่าสุด)" },
+    { type: "task", label: "ระบบกำกับดูแล (Misconduct, Report)", start: "2026-10-26", end: "2026-11-09", progress: 0, estimated: true, detail: "S4.4.1 Misconduct Scan · S4.4.2 Guideline Docs · S4.4.3 Report Content → ทำให้ S4 เสร็จ 100%" }
+  ];
+
+  var PX_PER_DAY = 26;
+  var INFO_WIDTH = 420;
+  var RULER_HEIGHT = 59;
+  var MONTH_ABBR = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+  var DAY_LETTER = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+
+  function daysFromStart(dateStr) { return Math.round((new Date(dateStr) - START) / 86400000); }
+  function leftPx(dateStr) { return daysFromStart(dateStr) * PX_PER_DAY; }
+  function formatShort(dateStr) {
+    var d = new Date(dateStr);
+    return d.getDate() + " " + MONTH_ABBR[d.getMonth()];
+  }
+  function isoDay(d) { return d.toISOString().slice(0, 10); }
+  function getWeeks() {
+    var weeks = [];
+    for (var d = new Date(START); d <= END; d.setDate(d.getDate() + 7)) {
+      weeks.push(new Date(d));
+    }
+    return weeks;
+  }
+  function getDays() {
+    var days = [];
+    for (var d = new Date(START); d <= END; d.setDate(d.getDate() + 1)) {
+      days.push(new Date(d));
+    }
+    return days;
+  }
+  function el(tag, cls, style) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (style) Object.assign(e.style, style);
+    return e;
+  }
+
+  var weeks = getWeeks();
+  var days = getDays();
+  var timelineWidth = leftPx(isoDay(END)) + PX_PER_DAY + 10;
+  var todayLeft = leftPx(isoDay(TODAY));
+  var totalWidth = INFO_WIDTH + timelineWidth;
+
+  // day-gridline background shared by every timeline row (day lines + darker week lines)
+  var dayGridBg = "repeating-linear-gradient(to right, #d8d8d2 0, #d8d8d2 1px, transparent 1px, transparent " +
+    (PX_PER_DAY * 7) + "px), repeating-linear-gradient(to right, #f0f0ec 0, #f0f0ec 1px, transparent 1px, transparent " + PX_PER_DAY + "px)";
+
+  var grid = document.getElementById("grid");
+  grid.style.width = totalWidth + "px";
+
+  // header row: sticky task-info label + 3-row date ruler (week / day number / day letter)
+  var headerRow = el("div", "grid-row sticky-top");
+  var infoHeader = el("div", "info-header", { height: RULER_HEIGHT + "px" });
+  infoHeader.textContent = "งาน / ความคืบหน้า / เริ่ม / สิ้นสุด";
+  headerRow.appendChild(infoHeader);
+
+  var ruler = el("div", "ruler", { width: timelineWidth + "px", height: RULER_HEIGHT + "px" });
+
+  weeks.forEach(function (w) {
+    var wk = el("div", "ruler-week", { left: leftPx(isoDay(w)) + "px", width: (PX_PER_DAY * 7) + "px" });
+    wk.textContent = formatShort(isoDay(w));
+    ruler.appendChild(wk);
+  });
+  days.forEach(function (d) {
+    var iso = isoDay(d);
+    var num = el("div", "ruler-daynum", { left: leftPx(iso) + "px", width: PX_PER_DAY + "px" });
+    num.textContent = d.getDate();
+    ruler.appendChild(num);
+    var letter = el("div", "ruler-dayletter", { left: leftPx(iso) + "px", width: PX_PER_DAY + "px" });
+    letter.textContent = DAY_LETTER[d.getDay()];
+    ruler.appendChild(letter);
+  });
+  headerRow.appendChild(ruler);
+  grid.appendChild(headerRow);
+
+  ROWS.forEach(function (row) {
+    var isHeader = row.type === "header";
+    var height = isHeader ? 40 : 46;
+
+    var gridRow = el("div", "grid-row");
+
+    var infoCell = el("div", "info-cell" + (isHeader ? " header-row" : ""), { height: height + "px" });
+    if (isHeader) {
+      infoCell.textContent = row.label;
+    } else {
+      var label = el("span", "info-label");
+      label.textContent = row.label;
+      label.title = row.detail || row.label;
+      infoCell.appendChild(label);
+      if (row.type === "task") {
+        var pct = el("span", "info-meta");
+        pct.textContent = row.progress + "%";
+        infoCell.appendChild(pct);
+      }
+      var startMeta = el("span", "info-meta");
+      startMeta.textContent = formatShort(row.type === "milestone" ? row.date : row.start);
+      infoCell.appendChild(startMeta);
+      if (row.type === "task") {
+        var endMeta = el("span", "info-meta");
+        endMeta.textContent = formatShort(row.end);
+        infoCell.appendChild(endMeta);
+      }
+    }
+    gridRow.appendChild(infoCell);
+
+    var timeline = el("div", "timeline" + (isHeader ? " header-row" : ""), {
+      width: timelineWidth + "px",
+      height: height + "px",
+      backgroundImage: dayGridBg,
+      backgroundColor: isHeader ? "#fafaf8" : "transparent"
+    });
+
+    var todayLine = el("div", "today-line", { left: todayLeft + "px" });
+    timeline.appendChild(todayLine);
+
+    if (row.type === "milestone") {
+      var x = leftPx(row.date);
+      var diamond = el("div", "milestone", { left: (x - 8.5) + "px", top: (height / 2 - 8.5) + "px" });
+      diamond.title = row.label + ": " + row.date;
+      timeline.appendChild(diamond);
+    } else if (row.type === "task") {
+      var left = leftPx(row.start);
+      var width = Math.max(6, leftPx(row.end) - left);
+      var fillColor = row.progress === 0 ? "transparent" : (row.progress < 100 ? "#BA7517" : "#1D9E75");
+      var bar = el("div", "task-bar", { left: left + "px", top: (height / 2 - 11) + "px", width: width + "px" });
+      bar.title = row.detail || row.label;
+      var fill = el("div", "task-fill", { width: row.progress + "%", background: fillColor });
+      bar.appendChild(fill);
+      timeline.appendChild(bar);
+    }
+
+    gridRow.appendChild(timeline);
+    grid.appendChild(gridRow);
+  });
+})();
+</script>
+</body>
+</html>

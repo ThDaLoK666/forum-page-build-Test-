@@ -238,7 +238,7 @@ export async function loadPost(id: number, myUid: string) {
     content: base.description,
     votes: (qr.data.vote_score ?? 0) - getStoredVote(`question:${id}`),
     views: qr.data.view_count,
-    createdAt: new Date(qr.data.created_at).toISOString(),
+    createdAt: timeAgo(qr.data.created_at),
     codeBlocks: (code.data ?? []).map((c: any) => ({ id: c.id, language: c.language, code: c.code })),
     files: fileList,
     answers: (answers.data ?? []).filter((a: any) => !a.deleted_at).map((a: any) =>
