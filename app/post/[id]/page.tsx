@@ -741,9 +741,11 @@ function AnswerCard({
   currentUserRole,
   onVerify,
   onAccept,
+  onDeleted,
   canAccept = false,
 }: {
   answer: Answer;
+  onDeleted?: (answerId: number) => void;
   currentUserRole: "student" | "ta" | "instructor";
   onVerify?: (answerId: number) => void;
   onAccept?: (answerId: number) => void;
@@ -968,7 +970,7 @@ function AnswerCard({
                 <>
                   <Button variant="ghost" size="sm" aria-label="แก้ไขคำตอบ" onClick={() => { setAnswerEdit(answerContent); setEditingAnswer(true); }}><Pencil className="w-4 h-4" /></Button>
                   <Button variant="ghost" size="sm" aria-label="ลบคำตอบ" className="text-destructive" onClick={async () => {
-                    try { await D.softDelete("answers", answer.id); setAnswerGone(true); toast.success("ลบคำตอบแล้ว"); }
+                    try { await D.softDelete("answers", answer.id); setAnswerGone(true); onDeleted?.(answer.id); toast.success("ลบคำตอบแล้ว"); }
                     catch (e) { toast.error("ลบไม่สำเร็จ", { description: errMsg(e) }); }
                   }}><Trash2 className="w-4 h-4" /></Button>
                 </>
@@ -1763,6 +1765,7 @@ function PostDetail({ initial, id }: { initial: Question; id: string }) {
                     currentUserRole={currentRole}
                     onVerify={handleVerify}
                     onAccept={handleAccept}
+                    onDeleted={(id) => setAnswers((prev) => prev.filter((a) => a.id !== id))}
                     canAccept={canAcceptAnswers}
                   />
                 </Card>
