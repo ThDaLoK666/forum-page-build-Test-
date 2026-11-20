@@ -392,6 +392,7 @@ function Header({
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">[+ New Post]</span>
           </Button>
+          <Link href="/library" className="hidden md:block"><Button variant="ghost" size="sm">คลังความรู้</Button></Link>
           <NotificationBell sessions={sessions} joinedIds={joinedIds} />
           <ActivityBell />
           <UserMenu />

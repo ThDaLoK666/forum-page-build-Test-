@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, ShieldCheck, User, LogOut, BookOpen, Eye } from "lucide-react";
+import { Bell, ShieldCheck, User, LogOut, BookOpen, Eye, Library } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth, Role } from "@/lib/auth";
 import { loadNotifications, markNotificationsRead, timeAgo } from "@/lib/data";
@@ -54,6 +54,7 @@ export function UserMenu() {
           )}
           <Link href="/profile" onClick={() => setOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-muted"><User className="w-4 h-4" />โปรไฟล์ของฉัน</Link>
           {isAdmin && <Link href="/admin" onClick={() => setOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-muted"><ShieldCheck className="w-4 h-4" />แผงผู้ดูแลระบบ</Link>}
+          <Link href="/library" onClick={() => setOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-muted"><Library className="w-4 h-4" />คลังไฟล์ โค้ด ลิงก์</Link>
           <Link href="/guidelines" onClick={() => setOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-muted"><BookOpen className="w-4 h-4" />กฎการใช้งาน</Link>
           <button onClick={signOut} className="w-full flex items-center gap-2 px-3 py-2 rounded hover:bg-muted text-left"><LogOut className="w-4 h-4" />ออกจากระบบ</button>
         </div>

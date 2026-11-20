@@ -323,3 +323,19 @@ export async function saveMySubjects(uid: string, codes: string[]) {
     if (error) throw error;
   }
 }
+
+// ---------- library (files / code / links, categorised) ----------
+export interface LibraryItem {
+  item_type: "file" | "code" | "link"; item_id: string; subject_code: string; category: string; title: string;
+  size_bytes: number | null; path: string | null; language: string | null; url: string | null;
+  is_pinned: boolean; question_id: number | null; created_at: string;
+}
+export async function loadLibrary(): Promise<LibraryItem[]> {
+  const { data, error } = await supabase.from("library_items").select("*").order("created_at", { ascending: false }).limit(1000);
+  if (error) throw error;
+  return (data ?? []) as LibraryItem[];
+}
+export async function setFileCategory(id: string, cat: string) {
+  const { error } = await supabase.rpc("set_file_category", { p_file: id, p_cat: cat });
+  if (error) throw error;
+}
