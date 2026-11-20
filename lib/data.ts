@@ -264,7 +264,7 @@ export async function editRow(table: "answers" | "comments", id: number, body: s
   if (error) throw error;
 }
 export async function softDelete(table: "answers" | "comments", id: number) {
-  const { error } = await supabase.from(table).update({ deleted_at: new Date().toISOString() }).eq("id", id);
+  const { error } = await supabase.rpc(table === "answers" ? "delete_answer" : "delete_comment", { p_id: id });
   if (error) throw error;
 }
 export async function acceptAnswer(id: number) {
