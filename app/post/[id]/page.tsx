@@ -1152,6 +1152,15 @@ function PostDetail({ initial, id }: { initial: Question; id: string }) {
   const { currentRole } = useTestContext();
   const { session, profile, isAdmin, viewAs } = useAuth();
   const question = initial;
+  const [pins, setPins] = useState<Record<string, boolean>>({});
+  const canPin = currentRole === "ta" || currentRole === "instructor";
+  const togglePin = async (fid: string, now: boolean) => {
+    try {
+      await D.pinFile(fid, !now);
+      setPins((p) => ({ ...p, [fid]: !now }));
+      toast.success(now ? "เลิกปักหมุดแล้ว" : "ปักหมุดไฟล์แล้ว", { description: now ? undefined : "ไฟล์จะแสดงใน Pinned Academic Repository" });
+    } catch (e) { toast.error("ทำรายการไม่สำเร็จ", { description: errMsg(e) }); }
+  };
   const [newAnswer, setNewAnswer] = useState("");
   const [answerCodeBlocks, setAnswerCodeBlocks] = useState<CodeBlock[]>([]);
   const {
@@ -1663,6 +1672,7 @@ function PostDetail({ initial, id }: { initial: Question; id: string }) {
                             <span className="text-sm text-foreground">{file.name}</span>
                             <span className="text-xs text-muted-foreground">({file.size})</span>
                             {(file as any).url && <a href={(file as any).url} download={file.name} className="text-xs text-primary underline ml-1">ดาวน์โหลด</a>}
+                            {canPin && (() => { const on = pins[file.id] ?? !!(file as any).pinned; return <button type="button" onClick={() => togglePin(String(file.id), on)} className="text-xs underline ml-1 text-amber-600">{on ? "เลิกปักหมุด" : "ปักหมุด"}</button>; })()}
                           </div>
                         ))}
                     </div>

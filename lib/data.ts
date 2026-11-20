@@ -230,7 +230,7 @@ export async function loadPost(id: number, myUid: string) {
     if (!f.storage_path.startsWith("demo/")) { try { url = await signedUrl(f.storage_path); } catch {} }
     fileList.push({
       id: f.id, name: f.file_name, type: f.mime_type, size: fmtSize(f.size_bytes), url,
-      preview: f.mime_type?.startsWith("image/") ? url : undefined, path: f.storage_path,
+      preview: f.mime_type?.startsWith("image/") ? url : undefined, path: f.storage_path, pinned: !!f.is_pinned,
     });
   }
   return {

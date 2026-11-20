@@ -312,6 +312,8 @@ P1 ทดสอบวันที่ 22 สิงหาคม 2569 P2 และ 
 
 แผนทั้งโครงการ ITDS491 และ ITDS492 ข้อมูล ณ 15 ต.ค. งานวิจัยออกแบบและทดสอบ P0–P3 เสร็จแล้ว ส่วน ITDS492 จะทำ Supabase Auth กับ Profile CRUD และ CRUD ที่เหลือพร้อมระบบกำกับดูแล
 
+ข้อมูลล่าสุด ณ 20 พ.ย. ก่อนสอบ 7 วัน งานที่สัญญาไว้ใน Gantt นี้เสร็จทุกแถวแล้ว รวม Supabase Auth, Profile, CRUD และระบบกำกับดูแล เว็บที่ deploy ตอนนี้คือระบบจริง ส่วนเอกสารและผลทดสอบ P1–P3 อธิบายต้นแบบ ITDS491 เดิมที่เก็บข้อมูลใน localStorage งานที่เหลือคือทดสอบผู้ใช้ 5 คน ปรับหน้าค้นหาตามผล T1 และ Content Style Guide ซึ่งอยู่ในแผนสัปดาห์ 1–12 ของ ITDS492
+
 **สไลด์ 66 – สรุปผลและข้อเสนอแนะ** (25 วิ) · เริ่ม ~18:42
 
 สรุปครับ ต้นแบบมีแนวโน้มตอบ 2 ปัญหา คือ [H] 15 จาก 19 คนด้วย Anonymous Post และ [IO] 13 จาก 19 คน ตามผลเบื้องต้นจาก P1 ข้อเสนอแนะคือขยายทดสอบอย่างน้อย 5 คน และเชื่อมฐานข้อมูลจริง แผนต่อไป ด้านประเมินสัปดาห์ 1–7 ด้านพัฒนาสัปดาห์ 2–9 ส่วน Verified Badge, Report/Moderation, Study Session เป็น Future Work
@@ -344,7 +346,7 @@ P1 ทดสอบวันที่ 22 สิงหาคม 2569 P2 และ 
 
 ## ภาคผนวก (สไลด์ 70–82) ใช้ตอบคำถาม
 
-70 หน้าคั่น · 71 สถาปัตยกรรม · 72 ER Diagram (เป้าหมาย ITDS492) · 73–76 โมดูล S1–S4 · 77 Requirement เชิงความรู้สึก · 78 Use Case · 79 System Flow · 80 Activity: Anonymous · 81 Sequence: Anonymous · 82 Future Work: Study Session
+70 หน้าคั่น · 71 สถาปัตยกรรม (ภาพใหม่ v9) · 72 ER Diagram (เป้าหมาย ITDS492) · 73–76 โมดูล S1–S4 · 77 Requirement เชิงความรู้สึก · 78 Use Case · 79 System Flow · 80 Activity: Anonymous · 81 Sequence: Anonymous · 82 Future Work: Study Session
 
 ข้อควรระวัง: ภาพ diagram บางหน้ามีคำว่า Study Session / Vote / Verify ซึ่งเป็น Future Work ให้พูดว่า “ส่วนที่เป็น Future Work ในภาพ ไม่อยู่ในขอบเขตทดสอบ”
 
